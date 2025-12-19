@@ -17,12 +17,11 @@ class SaperGame(arcade.Window):
         super().__init__(screen_width, screen_height, screen_title)
         arcade.set_background_color(arcade.color.BLACK)
         self.grid = [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+        self.bombs_counters = 10
         self.bombs_location = [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
         self.next_grid = None
-        self.bombs_counters = 10
-        self.paused = True
-        self.update_speed = 0.1
         self.update_timer = 0
+        self.update_speed = 0.1
         self.batch = Batch()
 
     def setup(self):
@@ -38,7 +37,7 @@ class SaperGame(arcade.Window):
             for col in range(GRID_WIDTH):
                 rand = random.randint(0, 1)
                 print(rand)
-                if self.bombs_counters == 0:
+                if self.bombs_counters != 0:
                     if rand == 1:
                         self.bombs_location[row][col] = 1
                         self.bombs_counters -= 1
@@ -57,13 +56,10 @@ class SaperGame(arcade.Window):
         self.batch.draw()
 
     def update_grid(self):
-        # self.next_grid = [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+        self.bombs_location = self.next_grid
         self.grid = self.next_grid
-        self.generation += 1
 
     def on_update(self, delta_time):
-        if self.paused:
-            return
         self.update_timer += delta_time
         if self.update_timer >= self.update_speed:
             self.update_timer = 0
@@ -82,14 +78,7 @@ class SaperGame(arcade.Window):
                     self.grid[row][col] = 1 - self.grid[row][col]
 
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.SPACE:
-            self.paused = not self.paused
-        elif key == arcade.key.R:
-            self.fill()
-        elif key == arcade.key.UP:
-            self.update_speed = max(0.01, self.update_speed * 0.9)
-        elif key == arcade.key.DOWN:
-            self.update_speed = min(1.0, self.update_speed * 1.1)
+        pass
 
 
 def main():
