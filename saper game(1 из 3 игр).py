@@ -26,25 +26,25 @@ class SaperGame(arcade.Window):
         self.batch = Batch()
 
     def setup(self):
-        self.random_fill()
+        self.fill()
+        self.fill_bombs()
 
-    def random_fill(self, density=0.3):
+    def fill(self, density=0.3):
         for row in range(GRID_HEIGHT - 60):
             for col in range(GRID_WIDTH):
-                self.grid[row][col] = 1
-
+                self.grid[row][col] = 0
+    def fill_bombs(self):
         for row in range(GRID_HEIGHT - 60):
             for col in range(GRID_WIDTH):
+                rand = random.randint(0, 1)
+                print(rand)
                 if self.bombs_counters == 0:
-                    self.bombs_location[row][col] = 0
-                else:
-                    if random.randrange(0, 1, 1) == 0:
+                    if rand == 1:
                         self.bombs_location[row][col] = 1
                         self.bombs_counters -= 1
-                    else:
-                        self.bombs_location[row][col] = 0
-        print(random.randrange(0, 1, 1))
         print(self.bombs_location)
+        print(self.bombs_counters)
+
 
     def on_draw(self):
         self.clear()
@@ -72,21 +72,20 @@ class SaperGame(arcade.Window):
     def on_mouse_press(self, x, y, button, modifiers):
         col = int(x // CELL_SIZE)
         row = int(y // CELL_SIZE)
-
+        self.batch = Batch()
         if 0 <= row < GRID_HEIGHT and 0 <= col < GRID_WIDTH:
             if button == arcade.MOUSE_BUTTON_LEFT:
-                for row in range(GRID_HEIGHT - 60):
-                    for col in range(GRID_WIDTH):
-                        if self.bombs_location[row][col] == 1:
-                            print("Сработало")
-                        else:
-                            self.grid[row][col] = 1 - self.grid[row][col]
+                if self.bombs_location[row][col] == 1:
+                    print("Сработало")
+                    self.grid[row][col] = 1 - self.grid[row][col]
+                else:
+                    self.grid[row][col] = 1 - self.grid[row][col]
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.SPACE:
             self.paused = not self.paused
         elif key == arcade.key.R:
-            self.random_fill()
+            self.fill()
         elif key == arcade.key.UP:
             self.update_speed = max(0.01, self.update_speed * 0.9)
         elif key == arcade.key.DOWN:
