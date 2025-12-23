@@ -1,0 +1,44 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "Map",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "ForPacMan.tsx": {
+            "scaleInDock": 2,
+            "scaleInEditor": 1
+        },
+        "Map": {
+            "scale": 2.945659722222222,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 29.025755879059346,
+                "y": 270.73731360876997
+            }
+        }
+    },
+    "last.imagePath": "/home/user/PycharmProjects/-Arcade/Files/ForPacMan",
+    "map.height": 36,
+    "map.lastUsedFormat": "tmx",
+    "map.layerDataFormat": null,
+    "map.tileHeight": 8,
+    "map.tileWidth": 8,
+    "map.width": 28,
+    "openFiles": [
+        "Map",
+        "ForPacMan.tsx"
+    ],
+    "project": "RealMapForPacMan.tiled-project",
+    "recentFiles": [
+        "ForPacMan.tsx",
+        "Map"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 8,
+        "width": 8
+    }
+}

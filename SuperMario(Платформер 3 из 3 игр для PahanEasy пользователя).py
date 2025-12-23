@@ -21,7 +21,7 @@ class SaperGame(arcade.Window):
     def setup(self):
         self.player_texture = arcade.load_texture(":resources:images/enemies/slimeBlue.png")
         self.player = arcade.Sprite(self.player_texture, scale=0.2)
-        tile_map = arcade.load_tilemap("For BackGrounds/ForMario/World 1.1 SuperMario.tmx", scaling=1)
+        tile_map = arcade.load_tilemap("Files/ForMario/World 1.1 SuperMario.tmx", scaling=1)
         self.scene = arcade.Scene.from_tilemap(tile_map)
         self.wall_list = tile_map.sprite_lists["Walls"]
         self.player.center_x = 16 * 8
