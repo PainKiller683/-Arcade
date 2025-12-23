@@ -4,13 +4,12 @@ import random
 from pyglet.graphics import Batch
 
 # Параметры экрана
-SCREEN_WIDTH = 3376
-SCREEN_HEIGHT = 480
+SCREEN_WIDTH = 16 * 16
+SCREEN_HEIGHT = 464 - 15 * 16
 SCREEN_TITLE = "Супер Марио"
-CELL_SIZE = 30
-GRID_WIDTH = 9
-GRID_HEIGHT = 9
-
+CELL_SIZE = 16
+DEAD_ZONE_W = int(SCREEN_WIDTH * 0.35)
+DEAD_ZONE_H = int(SCREEN_HEIGHT * 0.45)
 
 class SaperGame(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
@@ -18,36 +17,32 @@ class SaperGame(arcade.Window):
         arcade.set_background_color(arcade.color.BLACK)
         self.world_camera = arcade.camera.Camera2D()
         self.all_sprites = arcade.SpriteList()
-        self.player_texture = arcade.load_texture(":resources:images/enemies/slimeBlue.png")
-        self.texture = arcade.load_texture("For BackGrounds/NES - Super Mario Bros. - Stages - World 1-1.png")
-        self.player = arcade.Sprite(self.player_texture, scale=0.5)
-        y = 480
-        x = 50
-        self.player.center_x = x
-        self.player.center_y = y
-        self.all_sprites.append(self.player)
 
     def setup(self):
-        self.fill()
-
-    def fill(self, density=0.3):
-        pass
+        self.player_texture = arcade.load_texture(":resources:images/enemies/slimeBlue.png")
+        self.player = arcade.Sprite(self.player_texture, scale=0.2)
+        tile_map = arcade.load_tilemap("For BackGrounds/World 1.1 SuperMario.tmx", scaling=1)
+        self.scene = arcade.Scene.from_tilemap(tile_map)
+        self.wall_list = tile_map.sprite_lists["Walls"]
+        self.player.center_x = 16 * 8
+        self.player.center_y = 300
+        self.all_sprites.append(self.player)
+        self.physics_engine = arcade.PhysicsEngineSimple(
+            self.player, self.wall_list)
 
     def on_draw(self):
         self.world_camera.use()
+        self.scene.draw()
+        self.wall_list.draw()
         self.all_sprites.draw()
-        arcade.draw_texture_rect(self.texture, arcade.rect.XYWH(self.width // 2, self.height // 2, self.width, self.height))
 
     def on_update(self, delta_time):
+        self.physics_engine.update()
         position = (
             self.player.center_x,
             self.player.center_y
         )
-        self.world_camera.position = arcade.math.lerp_2d(  # Изменяем позицию камеры
-            self.world_camera.position,
-            position,
-            0.14,
-        )
+        self.world_camera.position = arcade.math.lerp_2d(self.world_camera.position, position, 0.14,)
 
     def on_mouse_press(self, x, y, button, modifiers):
         pass
