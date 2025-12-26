@@ -28,6 +28,7 @@ class SaperGame(arcade.Window):
         self.wall_list = self.tile_map.sprite_lists["Walls"]
         self.tubes_list = self.tile_map.sprite_lists["EXIT tubes"]
         self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
+        self.tubes = self.tile_map.sprite_lists["Tubes"]
         self.player.center_x = CELL_SIZE * 8
         self.player.center_y = 300
         self.player_music = self.music.play(volume=30)
@@ -36,6 +37,12 @@ class SaperGame(arcade.Window):
             self.player, self.wall_list)
         self.physics_engine1 = arcade.PhysicsEngineSimple(
             self.player, self.wall_list1)
+        self.physics_engine2 = arcade.PhysicsEngineSimple(
+            self.player, self.tubes)
+        # self.new_tubes = self.tubes_list.pop(0)
+        # self.new_tubes1 = self.new_tubes.pop(24)
+        # self.physics_engine3 = arcade.PhysicsEngineSimple(
+        #     self.player, self.new_tubes1)
 
     def on_draw(self):
         self.world_camera.use()
@@ -43,17 +50,20 @@ class SaperGame(arcade.Window):
         self.all_sprites.draw()
 
     def on_update(self, delta_time):
+
         is_collision = arcade.check_for_collision(self.player, self.tubes_list[0])
         if is_collision:
             self.player.center_x = CELL_SIZE * 49.5
-            self.player.center_y = CELL_SIZE* 13.5
-        is_collision1 = arcade.check_for_collision(self.player, self.tubes_list[1])
+            self.player.center_y = CELL_SIZE * 13.5
+        is_collision1 = arcade.check_for_collision(self.player, self.tubes_list[24])
         if is_collision1:
             self.player.center_x = CELL_SIZE * 164
             self.player.center_y = CELL_SIZE * 20.5
         self.player_music.play()
         self.physics_engine.update()
         self.physics_engine1.update()
+        self.physics_engine2.update()
+        self.physics_engine3.update()
         position = (
             self.player.center_x,
             self.player.center_y
