@@ -18,30 +18,42 @@ class SaperGame(arcade.Window):
         arcade.set_background_color(arcade.color.BLACK)
         self.world_camera = arcade.camera.Camera2D()
         self.all_sprites = arcade.SpriteList()
-
-    def setup(self):
+        self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
         self.player_texture = arcade.load_texture(":resources:images/enemies/slimeBlue.png")
         self.player = arcade.Sprite(self.player_texture, scale=0.2)
-        tile_map = arcade.load_tilemap("Files/ForMario/World 1.1 SuperMario.tmx", scaling=1)
-        self.scene = arcade.Scene.from_tilemap(tile_map)
-        self.wall_list = tile_map.sprite_lists["Walls"]
-        self.player.center_x = 16 * 8
+        self.tile_map = arcade.load_tilemap("Files/ForMario/World 1.1 SuperMario.tmx", scaling=1)
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
+
+    def setup(self):
+        self.wall_list = self.tile_map.sprite_lists["Walls"]
+        self.tubes_list = self.tile_map.sprite_lists["EXIT tubes"]
+        self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
+        self.player.center_x = CELL_SIZE * 8
         self.player.center_y = 300
-        self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
         self.player_music = self.music.play(volume=30)
         self.all_sprites.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player, self.wall_list)
+        self.physics_engine1 = arcade.PhysicsEngineSimple(
+            self.player, self.wall_list1)
 
     def on_draw(self):
         self.world_camera.use()
         self.scene.draw()
-        self.wall_list.draw()
         self.all_sprites.draw()
 
     def on_update(self, delta_time):
+        is_collision = arcade.check_for_collision(self.player, self.tubes_list[0])
+        if is_collision:
+            self.player.center_x = CELL_SIZE * 49.5
+            self.player.center_y = CELL_SIZE* 13.5
+        is_collision1 = arcade.check_for_collision(self.player, self.tubes_list[1])
+        if is_collision1:
+            self.player.center_x = CELL_SIZE * 164
+            self.player.center_y = CELL_SIZE * 20.5
         self.player_music.play()
         self.physics_engine.update()
+        self.physics_engine1.update()
         position = (
             self.player.center_x,
             self.player.center_y
@@ -53,13 +65,13 @@ class SaperGame(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.UP:
-            self.player.change_y = 5
+            self.player.change_y = 2
         elif key == arcade.key.DOWN:
-            self.player.change_y = -5
+            self.player.change_y = -2
         elif key == arcade.key.LEFT:
-            self.player.change_x = -5
+            self.player.change_x = -2
         elif key == arcade.key.RIGHT:
-            self.player.change_x = 5
+            self.player.change_x = 2
 
     def on_key_release(self, key, modifiers):
         if key == arcade.key.UP or key == arcade.key.DOWN:

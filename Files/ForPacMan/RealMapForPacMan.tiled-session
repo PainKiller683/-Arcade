@@ -8,16 +8,22 @@
     ],
     "file.lastUsedOpenFilter": "Все файлы (*)",
     "fileStates": {
+        "/home/user/PycharmProjects/-Arcade/Files/ForMario/MapForMario.tsx": {
+            "scaleInDock": 1
+        },
         "/home/user/PycharmProjects/-Arcade/Files/ForMario/Mario.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 3
         },
+        "/home/user/PycharmProjects/-Arcade/Files/ForMario/MarioTest.tsx": {
+            "dynamicWrapping": false
+        },
         "/home/user/PycharmProjects/-Arcade/Files/ForMario/World 1.1 SuperMario.tmx": {
-            "scale": 0.125,
-            "selectedLayer": 0,
+            "scale": 1,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 1308,
-                "y": 2580
+                "x": 938.5,
+                "y": 265.5
             }
         },
         "/home/user/PycharmProjects/-Arcade/Files/ForMario/World 1.2 mario.tsx": {
@@ -34,6 +40,14 @@
         "/home/user/PycharmProjects/-Arcade/Files/for space invaders/Player.tsx": {
             "scaleInDock": 1,
             "scaleInEditor": 11
+        },
+        "/home/user/PycharmProjects/-Arcade/Files/for space invaders/World 1.2 Mario": {
+            "scale": 1,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 322.5,
+                "y": 262.5
+            }
         },
         "CartaPacMan.tmx": {
             "scale": 3,
@@ -73,6 +87,7 @@
     ],
     "project": "RealMapForPacMan.tiled-project",
     "recentFiles": [
+        "/home/user/PycharmProjects/-Arcade/Files/ForMario/World 1.1 SuperMario.tmx",
         "/home/user/PycharmProjects/-Arcade/Files/for space invaders/Player.tsx",
         "/home/user/PycharmProjects/-Arcade/Files/ForMario/Mario.tsx",
         "ForPacMan.tsx",
