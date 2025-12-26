@@ -1,4 +1,5 @@
 import arcade
+from arcade import Sound
 import random
 
 from pyglet.graphics import Batch
@@ -26,6 +27,7 @@ class SaperGame(arcade.Window):
         self.wall_list = tile_map.sprite_lists["Walls"]
         self.player.center_x = 16 * 8
         self.player.center_y = 300
+        self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
         self.all_sprites.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player, self.wall_list)
@@ -37,6 +39,7 @@ class SaperGame(arcade.Window):
         self.all_sprites.draw()
 
     def on_update(self, delta_time):
+        arcade.play_sound(self.music,1.0, -1,True)
         self.physics_engine.update()
         position = (
             self.player.center_x,
