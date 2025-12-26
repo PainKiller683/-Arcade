@@ -28,6 +28,7 @@ class SaperGame(arcade.Window):
         self.player.center_x = 16 * 8
         self.player.center_y = 300
         self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
+        self.player_music = self.music.play(volume=30)
         self.all_sprites.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player, self.wall_list)
@@ -39,7 +40,7 @@ class SaperGame(arcade.Window):
         self.all_sprites.draw()
 
     def on_update(self, delta_time):
-        arcade.play_sound(self.music,1.0, -1,True)
+        self.player_music.play()
         self.physics_engine.update()
         position = (
             self.player.center_x,
