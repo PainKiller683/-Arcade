@@ -16,7 +16,7 @@ class SaperGame(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
         super().__init__(screen_width, screen_height, screen_title)
         arcade.set_background_color(arcade.color.BLACK)
-        arcade.load_tilemap("Files\ForPacMan\CartaPacMan.tmx")
+        # arcade.load_tilemap("Files\ForPacMan\CartaPacMan.tmx")
         self.grid = [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
         self.bombs_location = [[0 for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
         self.next_grid = None

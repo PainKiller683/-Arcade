@@ -12,8 +12,22 @@ CELL_SIZE = 16
 DEAD_ZONE_W = int(SCREEN_WIDTH * 0.35)
 DEAD_ZONE_H = int(SCREEN_HEIGHT * 0.45)
 
-class SaperGame(arcade.Window):
+class KeyboardState:
+    def __init__(self):
+        self.keys = {} # Словарь для хранения состояния клавиш
+
+    def pressed(self, key):
+        return self.keys.get(key, False)
+
+    def set_pressed(self, key, pressed):
+        self.keys[key] = pressed
+
+# Инициализация
+keyboard = KeyboardState()
+
+class SuperMario(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
+        self.keyboard = keyboard
         super().__init__(screen_width, screen_height, screen_title)
         arcade.set_background_color(arcade.color.BLACK)
         self.world_camera = arcade.camera.Camera2D()
@@ -26,12 +40,12 @@ class SaperGame(arcade.Window):
 
     def setup(self):
         self.wall_list = self.tile_map.sprite_lists["Walls"]
-        self.tubes_list = self.tile_map.sprite_lists["EXIT tubes"]
+        self.tubes_list = self.tile_map.sprite_lists["ExitTubes"]
         self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
         self.tubes = self.tile_map.sprite_lists["Tubes"]
         self.player.center_x = CELL_SIZE * 8
         self.player.center_y = 300
-        self.player_music = self.music.play(volume=30)
+        self.player_music = self.music.play(volume=1)
         self.all_sprites.append(self.player)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player, self.wall_list)
@@ -39,10 +53,6 @@ class SaperGame(arcade.Window):
             self.player, self.wall_list1)
         self.physics_engine2 = arcade.PhysicsEngineSimple(
             self.player, self.tubes)
-        # self.new_tubes = self.tubes_list.pop(0)
-        # self.new_tubes1 = self.new_tubes.pop(24)
-        # self.physics_engine3 = arcade.PhysicsEngineSimple(
-        #     self.player, self.new_tubes1)
 
     def on_draw(self):
         self.world_camera.use()
@@ -50,12 +60,11 @@ class SaperGame(arcade.Window):
         self.all_sprites.draw()
 
     def on_update(self, delta_time):
-
-        is_collision = arcade.check_for_collision(self.player, self.tubes_list[0])
+        is_collision = arcade.check_for_collision(self.player, self.tubes_list[0]) + arcade.check_for_collision(self.player, self.tubes_list[1])
         if is_collision:
             self.player.center_x = CELL_SIZE * 49.5
             self.player.center_y = CELL_SIZE * 13.5
-        is_collision1 = arcade.check_for_collision(self.player, self.tubes_list[24])
+        is_collision1 = arcade.check_for_collision(self.player, self.tubes_list[3]) + arcade.check_for_collision(self.player, self.tubes_list[2])
         if is_collision1:
             self.player.center_x = CELL_SIZE * 164
             self.player.center_y = CELL_SIZE * 20.5
@@ -63,7 +72,6 @@ class SaperGame(arcade.Window):
         self.physics_engine.update()
         self.physics_engine1.update()
         self.physics_engine2.update()
-        self.physics_engine3.update()
         position = (
             self.player.center_x,
             self.player.center_y
@@ -82,6 +90,7 @@ class SaperGame(arcade.Window):
             self.player.change_x = -2
         elif key == arcade.key.RIGHT:
             self.player.change_x = 2
+        # self.keyboard.set_pressed(key, True)
 
     def on_key_release(self, key, modifiers):
         if key == arcade.key.UP or key == arcade.key.DOWN:
@@ -91,7 +100,7 @@ class SaperGame(arcade.Window):
 
 
 def main():
-    game = SaperGame(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    game = SuperMario(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     game.setup()
     arcade.run()
 
