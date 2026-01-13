@@ -5,29 +5,23 @@ import random
 from pyglet.graphics import Batch
 
 # Параметры экрана
+CAMERA_LERP = 0.14
 SCREEN_WIDTH = 16 * 16
 SCREEN_HEIGHT = 464 - 15 * 16
 SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
-DEAD_ZONE_W = int(SCREEN_WIDTH * 0.35)
-DEAD_ZONE_H = int(SCREEN_HEIGHT * 0.45)
-
-class KeyboardState:
-    def __init__(self):
-        self.keys = {} # Словарь для хранения состояния клавиш
-
-    def pressed(self, key):
-        return self.keys.get(key, False)
-
-    def set_pressed(self, key, pressed):
-        self.keys[key] = pressed
+MOVE_SPEED = 1
+GRAVITY = 1
+MAX_JUMPS = 3
+COYOTE_TIME = 0.08
+JUMP_SPEED = 2
+JUMP_POWER_INCREMENT = 1
+JUMP_BUFFER = 0.5
 
 # Инициализация
-keyboard = KeyboardState()
 
 class SuperMario(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
-        self.keyboard = keyboard
         super().__init__(screen_width, screen_height, screen_title)
         arcade.set_background_color(arcade.color.BLACK)
         self.world_camera = arcade.camera.Camera2D()
@@ -47,12 +41,19 @@ class SuperMario(arcade.Window):
         self.player.center_y = 300
         self.player_music = self.music.play(volume=1)
         self.all_sprites.append(self.player)
+        self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.wall_list)
+        self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.wall_list1)
+        self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.tubes)
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player, self.wall_list)
         self.physics_engine1 = arcade.PhysicsEngineSimple(
             self.player, self.wall_list1)
         self.physics_engine2 = arcade.PhysicsEngineSimple(
             self.player, self.tubes)
+        self.left = self.right = self.up = self.down = self.jump_pressed = False
+        self.jump_left = 1
+        self.jump_buffer_timer = 5.0
+        self.time_since_ground = 999.0
 
     def on_draw(self):
         self.world_camera.use()
@@ -60,6 +61,30 @@ class SuperMario(arcade.Window):
         self.all_sprites.draw()
 
     def on_update(self, delta_time):
+        move = 0
+        self.update_jump_power()
+        if self.left and not self.right:
+            move = -MOVE_SPEED
+        elif self.right and not self.left:
+            move = MOVE_SPEED
+        self.player.change_x = move
+        grounded = self.engine.can_jump(y_distance=6)
+        if grounded:
+            self.time_since_ground = 0
+            self.jump_left = MAX_JUMPS
+        else:
+            self.time_since_ground += delta_time
+        if self.jump_buffer_timer > 0:
+            self.jump_buffer_timer -= delta_time
+        want_jump = self.jump_pressed or (self.jump_buffer_timer > 0)
+        if want_jump:
+            can_coyte = (self.time_since_ground <= COYOTE_TIME)
+            if grounded or can_coyte:
+                self.engine.jump(JUMP_SPEED)
+                self.jump_buffer_timer = 0
+        self.engine.update()
+        self.engine1.update()
+        self.engine2.update()
         is_collision = arcade.check_for_collision(self.player, self.tubes_list[0]) + arcade.check_for_collision(self.player, self.tubes_list[1])
         if is_collision:
             self.player.center_x = CELL_SIZE * 49.5
@@ -76,27 +101,54 @@ class SuperMario(arcade.Window):
             self.player.center_x,
             self.player.center_y
         )
-        self.world_camera.position = arcade.math.lerp_2d(self.world_camera.position, position, 0.14,)
+        cx, cy = self.world_camera.position
+        smooth = (cx + (position[0] - cx) * CAMERA_LERP,
+                  cy + (position[1] - cy) * CAMERA_LERP)
+        half_w = self.world_camera.viewport_width / 2
+        half_h = self.world_camera.viewport_height / 2
+        world_w = 3360
+        world_h = 464
+        cam_x = max(half_w, min(world_w - half_w, smooth[0]))
+        cam_y = max(half_h, min(world_h - half_w, smooth[1]))
+        self.world_camera.position = (cam_x, cam_y)
+
+    def update_jump_power(self):
+        global JUMP_SPEED
+        if self.jump_pressed:
+            JUMP_SPEED += JUMP_POWER_INCREMENT
+            if JUMP_SPEED > 5:
+                JUMP_SPEED = 5
+        else:
+            if JUMP_SPEED > 0:
+                JUMP_SPEED -= 1
 
     def on_mouse_press(self, x, y, button, modifiers):
         pass
 
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.UP:
-            self.player.change_y = 2
-        elif key == arcade.key.DOWN:
-            self.player.change_y = -2
-        elif key == arcade.key.LEFT:
-            self.player.change_x = -2
-        elif key == arcade.key.RIGHT:
-            self.player.change_x = 2
-        # self.keyboard.set_pressed(key, True)
+        if key in (arcade.key.LEFT, arcade.key.A):
+            self.left = True
+        elif key in (arcade.key.RIGHT, arcade.key.D):
+            self.right = True
+        elif key in (arcade.key.UP, arcade.key.W):
+            self.up = True
+        elif key in (arcade.key.DOWN, arcade.key.S):
+            self.down = True
+        elif key == arcade.key.SPACE:
+            self.jump_pressed = True
+            self.jump_buffer_timer = JUMP_BUFFER
 
     def on_key_release(self, key, modifiers):
-        if key == arcade.key.UP or key == arcade.key.DOWN:
-            self.player.change_y = 0
-        elif key == arcade.key.LEFT or arcade.key.RIGHT:
-            self.player.change_x = 0
+        if key in (arcade.key.LEFT, arcade.key.A):
+            self.left = False
+        elif key in (arcade.key.RIGHT, arcade.key.D):
+            self.right = False
+        elif key in (arcade.key.UP, arcade.key.W):
+            self.up = False
+        elif key in (arcade.key.DOWN, arcade.key.S):
+            self.down = False
+        elif key == arcade.key.SPACE:
+            self.jump_pressed = False
 
 
 def main():
