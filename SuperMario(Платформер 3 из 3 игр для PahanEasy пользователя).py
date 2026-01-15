@@ -13,7 +13,7 @@ CELL_SIZE = 16
 MOVE_SPEED = 1
 GRAVITY = 1
 MAX_JUMPS = 3
-COYOTE_TIME = 1
+COYOTE_TIME = 0.08
 JUMP_SPEED = 2
 JUMP_POWER_INCREMENT = 1
 JUMP_BUFFER = 0.5
@@ -54,6 +54,7 @@ class SuperMario(arcade.Window):
         self.jump_left = 1
         self.jump_buffer_timer = 5.0
         self.time_since_ground = 999.0
+        self.go_to_tubes = False
 
     def on_draw(self):
         self.world_camera.use()
@@ -86,11 +87,11 @@ class SuperMario(arcade.Window):
         self.engine1.update()
         self.engine2.update()
         is_collision = arcade.check_for_collision(self.player, self.tubes_list[0]) + arcade.check_for_collision(self.player, self.tubes_list[1])
-        if is_collision:
+        if is_collision and self.go_to_tubes:
             self.player.center_x = CELL_SIZE * 49.5
             self.player.center_y = CELL_SIZE * 13.5
         is_collision1 = arcade.check_for_collision(self.player, self.tubes_list[3]) + arcade.check_for_collision(self.player, self.tubes_list[2])
-        if is_collision1:
+        if is_collision1 and self.go_to_tubes:
             self.player.center_x = CELL_SIZE * 164
             self.player.center_y = CELL_SIZE * 20.5
         self.player_music.play()
@@ -137,6 +138,7 @@ class SuperMario(arcade.Window):
         elif key == arcade.key.SPACE:
             self.jump_pressed = True
             self.jump_buffer_timer = JUMP_BUFFER
+            self.go_to_tubes = True
 
     def on_key_release(self, key, modifiers):
         if key in (arcade.key.LEFT, arcade.key.A):
