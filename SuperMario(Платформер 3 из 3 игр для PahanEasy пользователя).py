@@ -4,8 +4,6 @@ import arcade.gui
 from arcade.gui import UIManager
 import random
 
-from pyglet.graphics import Batch
-
 # Параметры экрана
 CAMERA_LERP = 0.14
 SCREEN_WIDTH = 32 * 16
