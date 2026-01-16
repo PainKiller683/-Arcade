@@ -1,13 +1,15 @@
 import arcade
 from arcade import Sound
+import arcade.gui
+from arcade.gui import UIManager
 import random
 
 from pyglet.graphics import Batch
 
 # Параметры экрана
 CAMERA_LERP = 0.14
-SCREEN_WIDTH = 16 * 16
-SCREEN_HEIGHT = 464 - 15 * 16
+SCREEN_WIDTH = 32 * 16
+SCREEN_HEIGHT = 29 * 16
 SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
 MOVE_SPEED = 1
@@ -18,17 +20,17 @@ JUMP_SPEED = 2
 JUMP_POWER_INCREMENT = 1
 JUMP_BUFFER = 0.5
 
-# Инициализация
 
 class SuperMario(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
+        self.coins = 0
         super().__init__(screen_width, screen_height, screen_title)
         arcade.set_background_color(arcade.color.BLACK)
         self.world_camera = arcade.camera.Camera2D()
         self.all_sprites = arcade.SpriteList()
         self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
-        self.player_texture = arcade.load_texture(":resources:images/enemies/slimeBlue.png")
-        self.player = arcade.Sprite(self.player_texture, scale=0.2)
+        self.player_texture = arcade.load_texture("Files/ForMario/StopMario.png")
+        self.player = arcade.Sprite(self.player_texture, scale=1)
         self.tile_map = arcade.load_tilemap("Files/ForMario/World 1.1 SuperMario.tmx", scaling=1)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
@@ -37,10 +39,12 @@ class SuperMario(arcade.Window):
         self.tubes_list = self.tile_map.sprite_lists["ExitTubes"]
         self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
         self.tubes = self.tile_map.sprite_lists["Tubes"]
+        self.nothing = self.tile_map.sprite_lists["fall"]
         self.player.center_x = CELL_SIZE * 8
         self.player.center_y = 300
         self.player_music = self.music.play(volume=1)
         self.all_sprites.append(self.player)
+        self.coin_list = self.tile_map.sprite_lists["Coins"]
         self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.wall_list)
         self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.wall_list1)
         self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.tubes)
@@ -86,6 +90,13 @@ class SuperMario(arcade.Window):
         self.engine.update()
         self.engine1.update()
         self.engine2.update()
+        coins_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
+        for coin in coins_hit_list:
+            coin.remove_from_sprite_lists()
+        is_death = arcade.check_for_collision(self.player, self.nothing[0]) + arcade.check_for_collision(self.player, self.nothing[1])
+        if is_death:
+            self.player.center_x = CELL_SIZE * 1
+            self.player.center_y = CELL_SIZE * 2
         is_collision = arcade.check_for_collision(self.player, self.tubes_list[0]) + arcade.check_for_collision(self.player, self.tubes_list[1])
         if is_collision and self.go_to_tubes:
             self.player.center_x = CELL_SIZE * 49.5
@@ -108,7 +119,7 @@ class SuperMario(arcade.Window):
         half_w = self.world_camera.viewport_width / 2
         half_h = self.world_camera.viewport_height / 2
         world_w = 3360
-        world_h = 464
+        world_h = 29 * 16
         cam_x = max(half_w, min(world_w - half_w, smooth[0]))
         cam_y = max(half_h, min(world_h - half_w, smooth[1]))
         self.world_camera.position = (cam_x, cam_y)
