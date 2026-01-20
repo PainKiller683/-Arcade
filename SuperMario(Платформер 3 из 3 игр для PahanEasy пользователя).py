@@ -11,12 +11,13 @@ SCREEN_HEIGHT = 29 * 16
 SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
 MOVE_SPEED = 0.5
-GRAVITY = 0.8
+GRAVITY = 1
 MAX_JUMPS = 1
 COYOTE_TIME = 0.08
 JUMP_SPEED = 0
 JUMP_POWER_INCREMENT = 1
 JUMP_BUFFER = 0.5
+UPDATES_PER_FRAME = 7
 
 
 class SuperMario(arcade.Window):
@@ -31,11 +32,16 @@ class SuperMario(arcade.Window):
         self.player = arcade.Sprite(self.player_texture, scale=1)
         self.tile_map = arcade.load_tilemap("Files/ForMario/Тайлы/World 1.1 SuperMario.tmx", scaling=1)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        self.frames = arcade.load_spritesheet(file_name="Files/ForMario/Картинки/MarioGo1.png")
         self.current_frame = 0
         self.animation_speed = 10
         self.frame_counter = 0
         self.player.velocity_y = 0
+        self.walk_texture = []
+        for i in range(1, 4):
+            texture = self.walk_texture.append(arcade.load_texture(f"Files/ForMario/Картинки/MarioGo{i}.png"))
+            self.walk_texture.append(texture)
+        self.cur_frame = 0
+
 
     def setup(self):
         self.wall_list = self.tile_map.sprite_lists["Walls"]
@@ -63,16 +69,30 @@ class SuperMario(arcade.Window):
         self.time_since_ground = 999.0
         self.go_to_tubes = False
 
+    def update_animation(self, delta_time: float = 1 / 60):
+        if self.change_x == 0:
+            self.player_texture = self.player_texture
+            self.player = arcade.Sprite(self.player_texture, scale=1)
+            return
+        self.cur_frame += 1
+        if self.cur_frame > len(self.walk_textures) * UPDATES_PER_FRAME:
+            self.cur_frame = 0
+
+        frame_index = self.cur_frame // UPDATES_PER_FRAME
+        self.player_texture = self.walk_textures[frame_index]
+        self.player = arcade.Sprite(self.player_texture, scale=1)
     def on_draw(self):
         self.world_camera.use()
         self.scene.draw()
         self.all_sprites.draw()
 
     def on_update(self, delta_time):
+        self.player.update()
+        self.player.update_animation(delta_time)
         self.player.velocity_y -= GRAVITY * delta_time
         self.player.center_y += self.player.velocity_y * delta_time
         move = 0
-        self.update_jump_power()
+        #Движение
         if self.left and not self.right:
             move = -MOVE_SPEED
         elif self.right and not self.left:
@@ -98,6 +118,7 @@ class SuperMario(arcade.Window):
         coins_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coins_hit_list:
             coin.remove_from_sprite_lists()
+            self.coins += 1
         is_death = arcade.check_for_collision(self.player, self.nothing[0]) + arcade.check_for_collision(self.player, self.nothing[1])
         if is_death:
             self.player.center_x = CELL_SIZE * 1
@@ -124,36 +145,18 @@ class SuperMario(arcade.Window):
         half_w = self.world_camera.viewport_width / 2
         half_h = self.world_camera.viewport_height / 2
         world_w = 3360
-        world_h = 29 * 16
+        world_h = 35 * 16
         cam_x = max(half_w, min(world_w - half_w, smooth[0]))
         cam_y = max(half_h, min(world_h - half_w, smooth[1]))
         self.world_camera.position = (cam_x, cam_y)
-
-    def update_jump_power(self):
-        global JUMP_SPEED
-        if self.jump_pressed:
-            JUMP_SPEED += JUMP_POWER_INCREMENT
-            if JUMP_SPEED > 5:
-                JUMP_SPEED = 5
-        else:
-            if JUMP_SPEED > 0:
-                JUMP_SPEED -= 1
 
     def on_mouse_press(self, x, y, button, modifiers):
         pass
 
     def on_key_press(self, key, modifiers):
         #Уменьшить скорость прыжка и менять картинку
-
         if key == arcade.key.UP or key == arcade.key.W:
             self.jump = True
-            if self.engine.can_jump():
-                self.jump_pressed = True
-                self.player_texture = arcade.load_texture("Files/ForMario/Картинки/JumpMario.png")
-                self.jump_buffer_timer = JUMP_BUFFER
-                self.player.velocity_y = JUMP_SPEED
-                self.player.is_on_ground = False
-                # arcade.play_sound(self.jump_sound, volume=0.05)
         elif key == arcade.key.LEFT or key == arcade.key.A:
             self.left = True
         elif key == arcade.key.RIGHT or key == arcade.key.D:
@@ -164,8 +167,6 @@ class SuperMario(arcade.Window):
             self.jump_pressed = True
             self.player_texture = arcade.load_texture("Files/ForMario/Картинки/JumpMario.png")
             self.jump_buffer_timer = JUMP_BUFFER
-            self.player.velocity_y = JUMP_SPEED
-            self.player.is_on_ground = False
 
     def on_key_release(self, key, modifiers):
         if key in (arcade.key.LEFT, arcade.key.A):
