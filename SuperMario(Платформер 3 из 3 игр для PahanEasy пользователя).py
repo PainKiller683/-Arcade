@@ -11,7 +11,7 @@ SCREEN_HEIGHT = 29 * 16
 SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
 MOVE_SPEED = 1
-GRAVITY = 1
+GRAVITY = 0.8
 MAX_JUMPS = 3
 COYOTE_TIME = 0.08
 JUMP_SPEED = 2
@@ -31,6 +31,10 @@ class SuperMario(arcade.Window):
         self.player = arcade.Sprite(self.player_texture, scale=1)
         self.tile_map = arcade.load_tilemap("Files/ForMario/World 1.1 SuperMario.tmx", scaling=1)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
+        self.frames = arcade.load_spritesheet(file_name="Files/ForMario/MarioGo1.png")
+        self.current_frame = 0
+        self.animation_speed = 10
+        self.frame_counter = 0
 
     def setup(self):
         self.wall_list = self.tile_map.sprite_lists["Walls"]
@@ -65,6 +69,11 @@ class SuperMario(arcade.Window):
 
     def on_update(self, delta_time):
         move = 0
+        # self.frame_counter += 1
+        # if self.frame_counter >= 60 / self.animation_speed:  # Проверяем, пора ли менять кадр
+        #     self.frame_counter = 0
+        #     self.current_frame = (self.current_frame + 1) % len(self.frames)  # Переключаем кадр, % - остаток
+        #     self.set_texture(self.frames[self.current_frame])
         self.update_jump_power()
         if self.left and not self.right:
             move = -MOVE_SPEED
@@ -136,16 +145,30 @@ class SuperMario(arcade.Window):
         pass
 
     def on_key_press(self, key, modifiers):
-        if key in (arcade.key.LEFT, arcade.key.A):
-            self.left = True
-        elif key in (arcade.key.RIGHT, arcade.key.D):
-            self.right = True
-        elif key in (arcade.key.UP, arcade.key.W):
-            self.up = True
-        elif key in (arcade.key.DOWN, arcade.key.S):
-            self.down = True
+        if key == arcade.key.UP or key == arcade.key.W:
+            self.jump_key_down = True
+            self.mario.update_movement(self.left_key_down, self.right_key_down, self.jump_key_down,
+                                       self.sprint_key_down, self.physics_engine)
+            # Prevents the user from double jumping
+            self.jump_key_down = False
+            if self.physics_engine.can_jump():
+                arcade.play_sound(self.jump_sound, volume=0.05)
+
+        # Left
+        elif key == arcade.key.LEFT or key == arcade.key.A:
+            self.left_key_down = True
+            self.mario.update_movement(self.left_key_down, self.right_key_down, self.jump_key_down,
+                                       self.sprint_key_down, self.physics_engine)
+
+        elif key == arcade.key.RIGHT or key == arcade.key.D:
+            self.right_key_down = True
+            self.mario.update_movement(self.left_key_down, self.right_key_down, self.jump_key_down,
+                                       self.sprint_key_down, self.physics_engine)
+        elif key == arcade.key.DOWN or key == arcade.key.S:
+            self.down_key_down = True
         elif key == arcade.key.SPACE:
             self.jump_pressed = True
+            self.player_texture = arcade.load_texture("Files/ForMario/JumpMario.png")
             self.jump_buffer_timer = JUMP_BUFFER
             self.go_to_tubes = True
 
