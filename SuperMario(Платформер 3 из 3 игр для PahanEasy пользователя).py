@@ -10,11 +10,11 @@ SCREEN_WIDTH = 32 * 16
 SCREEN_HEIGHT = 29 * 16
 SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
-MOVE_SPEED = 1
+MOVE_SPEED = 0.5
 GRAVITY = 0.8
-MAX_JUMPS = 3
+MAX_JUMPS = 1
 COYOTE_TIME = 0.08
-JUMP_SPEED = 2
+JUMP_SPEED = 0
 JUMP_POWER_INCREMENT = 1
 JUMP_BUFFER = 0.5
 
@@ -27,14 +27,15 @@ class SuperMario(arcade.Window):
         self.world_camera = arcade.camera.Camera2D()
         self.all_sprites = arcade.SpriteList()
         self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
-        self.player_texture = arcade.load_texture("Files/ForMario/StopMario.png")
+        self.player_texture = arcade.load_texture("Files/ForMario/Картинки/StopMario.png")
         self.player = arcade.Sprite(self.player_texture, scale=1)
-        self.tile_map = arcade.load_tilemap("Files/ForMario/World 1.1 SuperMario.tmx", scaling=1)
+        self.tile_map = arcade.load_tilemap("Files/ForMario/Тайлы/World 1.1 SuperMario.tmx", scaling=1)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        self.frames = arcade.load_spritesheet(file_name="Files/ForMario/MarioGo1.png")
+        self.frames = arcade.load_spritesheet(file_name="Files/ForMario/Картинки/MarioGo1.png")
         self.current_frame = 0
         self.animation_speed = 10
         self.frame_counter = 0
+        self.player.velocity_y = 0
 
     def setup(self):
         self.wall_list = self.tile_map.sprite_lists["Walls"]
@@ -68,19 +69,16 @@ class SuperMario(arcade.Window):
         self.all_sprites.draw()
 
     def on_update(self, delta_time):
+        self.player.velocity_y -= GRAVITY * delta_time
+        self.player.center_y += self.player.velocity_y * delta_time
         move = 0
-        # self.frame_counter += 1
-        # if self.frame_counter >= 60 / self.animation_speed:  # Проверяем, пора ли менять кадр
-        #     self.frame_counter = 0
-        #     self.current_frame = (self.current_frame + 1) % len(self.frames)  # Переключаем кадр, % - остаток
-        #     self.set_texture(self.frames[self.current_frame])
         self.update_jump_power()
         if self.left and not self.right:
             move = -MOVE_SPEED
         elif self.right and not self.left:
             move = MOVE_SPEED
         self.player.change_x = move
-        grounded = self.engine.can_jump(y_distance=6)
+        grounded = self.engine.can_jump(y_distance=1)
         if grounded:
             self.time_since_ground = 0
             self.jump_left = MAX_JUMPS
@@ -145,32 +143,29 @@ class SuperMario(arcade.Window):
         pass
 
     def on_key_press(self, key, modifiers):
+        #Уменьшить скорость прыжка и менять картинку
+
         if key == arcade.key.UP or key == arcade.key.W:
-            self.jump_key_down = True
-            self.mario.update_movement(self.left_key_down, self.right_key_down, self.jump_key_down,
-                                       self.sprint_key_down, self.physics_engine)
-            # Prevents the user from double jumping
-            self.jump_key_down = False
-            if self.physics_engine.can_jump():
-                arcade.play_sound(self.jump_sound, volume=0.05)
-
-        # Left
+            self.jump = True
+            if self.engine.can_jump():
+                self.jump_pressed = True
+                self.player_texture = arcade.load_texture("Files/ForMario/Картинки/JumpMario.png")
+                self.jump_buffer_timer = JUMP_BUFFER
+                self.player.velocity_y = JUMP_SPEED
+                self.player.is_on_ground = False
+                # arcade.play_sound(self.jump_sound, volume=0.05)
         elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.left_key_down = True
-            self.mario.update_movement(self.left_key_down, self.right_key_down, self.jump_key_down,
-                                       self.sprint_key_down, self.physics_engine)
-
+            self.left = True
         elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.right_key_down = True
-            self.mario.update_movement(self.left_key_down, self.right_key_down, self.jump_key_down,
-                                       self.sprint_key_down, self.physics_engine)
+            self.right = True
         elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.down_key_down = True
+            self.down = True
         elif key == arcade.key.SPACE:
             self.jump_pressed = True
-            self.player_texture = arcade.load_texture("Files/ForMario/JumpMario.png")
+            self.player_texture = arcade.load_texture("Files/ForMario/Картинки/JumpMario.png")
             self.jump_buffer_timer = JUMP_BUFFER
-            self.go_to_tubes = True
+            self.player.velocity_y = JUMP_SPEED
+            self.player.is_on_ground = False
 
     def on_key_release(self, key, modifiers):
         if key in (arcade.key.LEFT, arcade.key.A):
@@ -179,6 +174,7 @@ class SuperMario(arcade.Window):
             self.right = False
         elif key in (arcade.key.UP, arcade.key.W):
             self.up = False
+            self.jump_pressed = False
         elif key in (arcade.key.DOWN, arcade.key.S):
             self.down = False
         elif key == arcade.key.SPACE:
