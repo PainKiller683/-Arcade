@@ -23,7 +23,7 @@ class Player(arcade.Sprite):
     def __init__(self):
         super().__init__()
         self.character_face_direction = 0
-        self.img = arcade.load_texture_pair("Files/ForMario/Картинки/StopMario.png")
+        self.img = arcade.load_texture("Files/ForMario/Картинки/StopMario.png", flipped_horizontally=True)
         self.walk_textures = []
         for i in range(1, 4):
             self.walk_textures.append(arcade.load_texture(f"Files/ForMario/Картинки/MarioGo{i}.png"))
