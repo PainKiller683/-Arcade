@@ -17,33 +17,68 @@ COYOTE_TIME = 0.08
 JUMP_SPEED = 0
 JUMP_POWER_INCREMENT = 1
 JUMP_BUFFER = 0.5
-UPDATES_PER_FRAME = 7
+UPDATES_PER_FRAME = 4
 
+class Player(arcade.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.character_face_direction = 0
+        self.img = arcade.load_texture_pair("Files/ForMario/Картинки/StopMario.png")
+        self.walk_textures = []
+        for i in range(1, 4):
+            self.walk_textures.append(arcade.load_texture(f"Files/ForMario/Картинки/MarioGo{i}.png"))
+            r = arcade.load_texture(f"Files/ForMario/Картинки/MarioGo{i}.png")
+            l = arcade.load_texture(f"Files/ForMario/Картинки/MarioGo{i}.png", flipped_horizontally=True)
+            self.walk_textures.append([r, l])
+        self.cur_frame = 0
+        self.texture = self.stop_texture
+
+    def update_animation(self, delta_time: float = 1 / 60):
+        if self.change_x < 0 and self.character_face_direction == 0:
+            self.character_face_direction = 1  # Повернулся влево
+        elif self.change_x > 0 and self.character_face_direction == 1:
+            self.character_face_direction = 0  # Повернулся вправо
+
+            # ЕСЛИ ПЕРСОНАЖ СТОИТ
+        if self.change_x == 0:
+            # Показываем картинку "стоит" в текущем направлении
+            self.texture = self.stop_texture[self.character_face_direction]
+            return
+
+            # ЕСЛИ ПЕРСОНАЖ БЕЖИТ (АНИМАЦИЯ)
+        self.cur_frame += 1
+
+        # Зацикливаем 4 кадра
+        # Умножаем на UPDATES_PER_FRAME, чтобы замедлить смену картинок
+        if self.cur_frame > 3 * UPDATES_PER_FRAME:
+            self.cur_frame = 0
+
+        # Вычисляем индекс текущего кадра (0, 1, 2 или 3)
+        frame_index = self.cur_frame // UPDATES_PER_FRAME
+
+        # Устанавливаем текстуру: [номер_кадра][направление]
+        self.texture = self.walk_textures[frame_index][self.character_face_direction]
 
 class SuperMario(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
-        self.coins = 0
         super().__init__(screen_width, screen_height, screen_title)
-        arcade.set_background_color(arcade.color.BLACK)
-        self.world_camera = arcade.camera.Camera2D()
-        self.all_sprites = arcade.SpriteList()
-        self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
-        self.player_texture = arcade.load_texture("Files/ForMario/Картинки/StopMario.png")
-        self.player = arcade.Sprite(self.player_texture, scale=1)
-        self.tile_map = arcade.load_tilemap("Files/ForMario/Тайлы/World 1.1 SuperMario.tmx", scaling=1)
-        self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        self.current_frame = 0
+        self.player_list = None
+        self.player = None
         self.animation_speed = 10
         self.frame_counter = 0
-        self.player.velocity_y = 0
-        self.walk_texture = []
-        for i in range(1, 4):
-            texture = self.walk_texture.append(arcade.load_texture(f"Files/ForMario/Картинки/MarioGo{i}.png"))
-            self.walk_texture.append(texture)
-        self.cur_frame = 0
-
+        self.coins = 0
+        self.world_camera = arcade.camera.Camera2D()
+        arcade.set_background_color(arcade.color.BLACK)
+        self.all_sprites = arcade.SpriteList()
+        self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
+        self.tile_map = arcade.load_tilemap("Files/ForMario/Тайлы/World 1.1 SuperMario.tmx", scaling=1)
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
     def setup(self):
+        self.player_list = arcade.SpriteList()
+        self.player = Player()
+        self.player_list.append(self.player)
+        self.player.velocity_y = 0
         self.wall_list = self.tile_map.sprite_lists["Walls"]
         self.tubes_list = self.tile_map.sprite_lists["ExitTubes"]
         self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
@@ -52,7 +87,6 @@ class SuperMario(arcade.Window):
         self.player.center_x = CELL_SIZE * 8
         self.player.center_y = 300
         self.player_music = self.music.play(volume=1)
-        self.all_sprites.append(self.player)
         self.coin_list = self.tile_map.sprite_lists["Coins"]
         self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.wall_list)
         self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.wall_list1)
@@ -68,27 +102,15 @@ class SuperMario(arcade.Window):
         self.jump_buffer_timer = 5.0
         self.time_since_ground = 999.0
         self.go_to_tubes = False
-
-    def update_animation(self, delta_time: float = 1 / 60):
-        if self.change_x == 0:
-            self.player_texture = self.player_texture
-            self.player = arcade.Sprite(self.player_texture, scale=1)
-            return
-        self.cur_frame += 1
-        if self.cur_frame > len(self.walk_textures) * UPDATES_PER_FRAME:
-            self.cur_frame = 0
-
-        frame_index = self.cur_frame // UPDATES_PER_FRAME
-        self.player_texture = self.walk_textures[frame_index]
-        self.player = arcade.Sprite(self.player_texture, scale=1)
     def on_draw(self):
         self.world_camera.use()
         self.scene.draw()
         self.all_sprites.draw()
+        self.player_list.draw()
 
     def on_update(self, delta_time):
-        self.player.update()
-        self.player.update_animation(delta_time)
+        self.player_list.update()
+        self.player_list.update_animation(delta_time)
         self.player.velocity_y -= GRAVITY * delta_time
         self.player.center_y += self.player.velocity_y * delta_time
         move = 0
