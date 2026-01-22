@@ -174,7 +174,7 @@ class SuperMario(arcade.Window):
         half_w = self.world_camera.viewport_width / 2
         half_h = self.world_camera.viewport_height / 2
         world_w = 3360
-        world_h = 35 * 16
+        world_h = 30 * 16
         cam_x = max(half_w, min(world_w - half_w, smooth[0]))
         cam_y = max(half_h, min(world_h - half_w, smooth[1]))
         self.world_camera.position = (cam_x, cam_y)
