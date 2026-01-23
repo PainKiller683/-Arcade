@@ -116,12 +116,10 @@ class Mainwindow(arcade.Window):
         if is_collision and self.go_to_tubes_down:
             self.player.center_x = CELL_SIZE * 49.5
             self.player.center_y = CELL_SIZE * 13.5
-            self.go_to_tubes_down = False
         is_collision1 = arcade.check_for_collision(self.player, self.tubes_list[3]) + arcade.check_for_collision(self.player, self.tubes_list[2])
         if is_collision1 and self.go_to_tubes_right:
             self.player.center_x = CELL_SIZE * 164
             self.player.center_y = CELL_SIZE * 20.5
-            self.go_to_tubes_right = False
         self.go_to_tubes_down = False
         self.go_to_tubes_right = False
 

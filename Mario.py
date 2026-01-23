@@ -43,6 +43,7 @@ class Player(arcade.Sprite):
         if abs(self.change_y) > 0.1:
             self.texture = self.jump[idx]
             return
+
         elif abs(self.change_y) < 0.1:
             self.texture = self.idle_textures[idx]
 
