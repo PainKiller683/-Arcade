@@ -9,7 +9,7 @@ JUMP_SPEED = 10  # Мощность прыжка
 MOVEMENT_SPEED = 5
 
 
-class QuestionBlock(arcade.Sprite):
+class Block(arcade.Sprite):
     def __init__(self, x, y):
         super().__init__(":resources:images/tiles/boxCrate_double.png", 0.5)
         self.center_x = x
@@ -74,7 +74,6 @@ class MyGame(arcade.Window):
                 self.player.change_y = JUMP_SPEED
 
     def on_key_release(self, key, modifiers):
-        # Механика короткого/длинного прыжка (из прошлого ответа)
         if key == arcade.key.SPACE and self.player.change_y > 3:
             self.player.change_y = 3
 

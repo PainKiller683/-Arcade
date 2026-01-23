@@ -1,5 +1,7 @@
 import arcade
+from Mario import Player
 from arcade import Sound
+# from Block import My_Blocks
 import arcade.gui
 from arcade.examples.camera_platform import JUMP_SPEED
 from arcade.gui import UIManager
@@ -13,55 +15,11 @@ SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
 MOVE_SPEED = 0.5
 GRAVITY = 0.4
-MAX_JUMPS = 1
+PLAYER_GRAVITY = 1
 JUMP_SPEED = 8
-JUMP_POWER_INCREMENT = 1
-JUMP_BUFFER = 0.5
-UPDATES_PER_FRAME = 4
-MIN_JUMP_SPEED = 6
+MIN_JUMP_SPEED = 5
 
-class Player(arcade.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.face_right = True
-        stop = arcade.load_texture("Files/ForMario/Картинки/StopMario.png")
-        self.idle_textures = [stop, stop.flip_left_right()]
-        self.jump = arcade.load_texture("Files/ForMario/Картинки/JumpMario.png")
-        self.walk_textures = []
-        for i in range(1, 4):
-            walk = arcade.load_texture(f"Files/ForMario/Картинки/MarioGo{i}.png")
-            self.walk_textures.append([walk, walk.flip_left_right()])
-        self.cur_frame = 0
-        self.texture = self.idle_textures[0]
-
-    def update_animation(self, delta_time: float = 1 / 60):
-        if self.change_x > 0:
-            self.face_right = True
-        elif self.change_x < 0:
-            self.face_right = False
-
-        idx = 0 if self.face_right else 1
-
-        # СОСТОЯНИЕ: Прыжок (если мы не на земле)
-        # В Arcade change_y != 0 значит, что мы либо летим, либо падаем
-        if abs(self.change_y) > 0.1:
-            self.texture = self.jump
-            return
-
-        # СОСТОЯНИЕ: Покой
-        if abs(self.change_x) < 0.1:
-            self.texture = self.idle_textures[idx]
-            return
-
-        # СОСТОЯНИЕ: Бег
-        self.cur_frame += 1
-        frame_index = self.cur_frame // 10
-        if frame_index < len(self.walk_textures):
-            self.texture = self.walk_textures[frame_index][idx]
-        else:
-            self.cur_frame = 0
-
-class SuperMario(arcade.Window):
+class Mainwindow(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
         super().__init__(screen_width, screen_height, screen_title)
         self.player_list = None
@@ -80,17 +38,21 @@ class SuperMario(arcade.Window):
         #Игрок и его данные
         self.player_list = arcade.SpriteList()
         self.player = Player()
+        # self.blocks = My_Blocks()
         self.player_list.append(self.player)
         self.left = self.right = self.up = self.down = False
-        self.go_to_tubes = False
+        self.go_to_tubes_down = False
+        self.go_to_tubes_right = False
 
         #Загрузка спрайтой
         self.wall_list = self.tile_map.sprite_lists["Walls"]
         self.tubes_list = self.tile_map.sprite_lists["ExitTubes"]
         self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
         self.tubes = self.tile_map.sprite_lists["Tubes"]
-        self.nothing = self.tile_map.sprite_lists["fall"]
+        self.nothing = self.tile_map.sprite_lists["Nothing"]
+        self.fall = self.tile_map.sprite_lists["fall"]
         self.coin_list = self.tile_map.sprite_lists["Coins"]
+        self.funct_tubes = self.tile_map.sprite_lists["ExitTubes"]
 
         #Начальное положение игрока
         self.player.center_x = CELL_SIZE * 8
@@ -100,9 +62,10 @@ class SuperMario(arcade.Window):
         self.player_music = self.music.play(volume=1)
 
         #Движки для прыжков
-        self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.wall_list)
-        self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.wall_list1)
-        self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, walls=self.tubes)
+        self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.wall_list)
+        self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.wall_list1)
+        self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.tubes)
+        self.engine3 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY,walls=self.funct_tubes)
 
         #Движки для взаимодействия(ударов)
         self.physics_engine = arcade.PhysicsEngineSimple(
@@ -122,8 +85,8 @@ class SuperMario(arcade.Window):
         #Обновление игрока
         self.physics_engine.update()
         self.player.update_animation(delta_time)
-        move = 0
         #Движение
+        move = 0
         if self.left and not self.right:
             move = -MOVE_SPEED
         elif self.right and not self.left:
@@ -134,26 +97,38 @@ class SuperMario(arcade.Window):
         self.engine.update()
         self.engine1.update()
         self.engine2.update()
+        self.engine3.update()
 
         #Колизии игрока и предметов
         coins_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coins_hit_list:
             coin.remove_from_sprite_lists()
             self.coins += 1
-        is_death = arcade.check_for_collision(self.player, self.nothing[0]) + arcade.check_for_collision(self.player, self.nothing[1])
-        if is_death:
-            self.player.center_x = CELL_SIZE * 1
-            self.player.center_y = CELL_SIZE * 2
+        for i in self.nothing:
+            is_death = arcade.check_for_collision(self.player, i)
+            if is_death:
+                self.player.center_x = CELL_SIZE * 8
+                self.player.center_y = 300
         is_collision = arcade.check_for_collision(self.player, self.tubes_list[0]) + arcade.check_for_collision(self.player, self.tubes_list[1])
-        if is_collision and self.go_to_tubes:
+        # if arcade.check_for_collision_with_list(self.blocks):
+        #     self.blocks.center_y += self.blocks.bump_speed
+        #     if self.blocks.center_y > self.blocks.original_y + 10:
+        #         self.blocks.bump_speed = -5
+        #     if self.blocks.center_y <= self.blocks.original_y:
+        #         self.blocks.center_y = self.blocks.original_y
+        #         self.blocks.is_bumping = False
+        #         self.blocks.bump_speed = 5
+        if is_collision and self.go_to_tubes_down:
             self.player.center_x = CELL_SIZE * 49.5
             self.player.center_y = CELL_SIZE * 13.5
-            self.go_to_tubes = False
+            self.go_to_tubes_down = False
         is_collision1 = arcade.check_for_collision(self.player, self.tubes_list[3]) + arcade.check_for_collision(self.player, self.tubes_list[2])
-        if is_collision1 and self.go_to_tubes:
+        if is_collision1 and self.go_to_tubes_right:
             self.player.center_x = CELL_SIZE * 164
             self.player.center_y = CELL_SIZE * 20.5
-            self.go_to_tubes = False
+            self.go_to_tubes_right = False
+        self.go_to_tubes_down = False
+        self.go_to_tubes_right = False
 
         #Музыка и звуки
         self.player_music.play()
@@ -162,6 +137,7 @@ class SuperMario(arcade.Window):
         self.physics_engine.update()
         self.physics_engine1.update()
         self.physics_engine2.update()
+        # self.blocks.update()
 
         #Все что нужно для камеры
         position = (
@@ -188,11 +164,12 @@ class SuperMario(arcade.Window):
             self.left = True
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.right = True
+            self.go_to_tubes_right = True
         elif key == arcade.key.DOWN or key == arcade.key.S:
             self.down = True
-            self.go_to_tubes = True
+            self.go_to_tubes_down = True
         elif key == arcade.key.SPACE:
-            if self.engine.can_jump() or self.engine1.can_jump() or self.engine2.can_jump():
+            if self.engine.can_jump() or self.engine1.can_jump() or self.engine2.can_jump() or self.engine3.can_jump():
                 self.player.change_y = JUMP_SPEED
 
     def on_key_release(self, key, modifiers):
@@ -200,15 +177,17 @@ class SuperMario(arcade.Window):
             self.left = False
         elif key in (arcade.key.RIGHT, arcade.key.D):
             self.right = False
+            self.go_to_tubes_right = False
         elif key in (arcade.key.DOWN, arcade.key.S):
             self.down = False
+            self.go_to_tubes_right = False
         elif key == arcade.key.SPACE:
             if self.player.change_y > MIN_JUMP_SPEED:
                 self.player.change_y = MIN_JUMP_SPEED
 
 
 def main():
-    game = SuperMario(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    game = Mainwindow(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     game.setup()
     arcade.run()
 
