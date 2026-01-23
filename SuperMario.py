@@ -16,7 +16,7 @@ CELL_SIZE = 16
 MOVE_SPEED = 0.5
 GRAVITY = 0.4
 PLAYER_GRAVITY = 1
-JUMP_SPEED = 8
+JUMP_SPEED = 10
 MIN_JUMP_SPEED = 5
 
 class Mainwindow(arcade.Window):
