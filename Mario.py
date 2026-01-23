@@ -1,7 +1,6 @@
 import arcade
 from arcade import Sound
 import arcade.gui
-from arcade.examples.camera_platform import JUMP_SPEED
 from arcade.gui import UIManager
 import random
 
@@ -14,7 +13,7 @@ CELL_SIZE = 16
 MOVE_SPEED = 0.5
 GRAVITY = 0.4
 MAX_JUMPS = 1
-JUMP_SPEED = 8
+JUMP_SPEED = 11
 UPDATES_PER_FRAME = 4
 MIN_JUMP_SPEED = 5
 
@@ -44,8 +43,10 @@ class Player(arcade.Sprite):
         if abs(self.change_y) > 0.1:
             self.texture = self.jump[idx]
             return
+        elif abs(self.change_y) < 0.1:
+            self.texture = self.idle_textures[idx]
 
-        if abs(self.change_x) < 0.1 or abs(self.change_y) < 0.1:
+        if abs(self.change_x) < 0.1:
             self.texture = self.idle_textures[idx]
             return
 

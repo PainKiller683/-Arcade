@@ -3,7 +3,6 @@ from Mario import Player
 from arcade import Sound
 # from Block import My_Blocks
 import arcade.gui
-from arcade.examples.camera_platform import JUMP_SPEED
 from arcade.gui import UIManager
 import random
 
@@ -16,7 +15,7 @@ CELL_SIZE = 16
 MOVE_SPEED = 0.5
 GRAVITY = 0.4
 PLAYER_GRAVITY = 1
-JUMP_SPEED = 10
+JUMP_SPEED = 11
 MIN_JUMP_SPEED = 5
 
 class Mainwindow(arcade.Window):
@@ -52,7 +51,6 @@ class Mainwindow(arcade.Window):
         self.nothing = self.tile_map.sprite_lists["Nothing"]
         self.fall = self.tile_map.sprite_lists["fall"]
         self.coin_list = self.tile_map.sprite_lists["Coins"]
-        self.funct_tubes = self.tile_map.sprite_lists["ExitTubes"]
 
         #Начальное положение игрока
         self.player.center_x = CELL_SIZE * 8
@@ -65,7 +63,6 @@ class Mainwindow(arcade.Window):
         self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.wall_list)
         self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.wall_list1)
         self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.tubes)
-        self.engine3 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY,walls=self.funct_tubes)
 
         #Движки для взаимодействия(ударов)
         self.physics_engine = arcade.PhysicsEngineSimple(
@@ -97,18 +94,16 @@ class Mainwindow(arcade.Window):
         self.engine.update()
         self.engine1.update()
         self.engine2.update()
-        self.engine3.update()
 
         #Колизии игрока и предметов
         coins_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
         for coin in coins_hit_list:
             coin.remove_from_sprite_lists()
             self.coins += 1
-        for i in self.nothing:
-            is_death = arcade.check_for_collision(self.player, i)
-            if is_death:
-                self.player.center_x = CELL_SIZE * 8
-                self.player.center_y = 300
+        hit_list = arcade.check_for_collision_with_list(self.player, self.nothing)
+        if hit_list:
+            self.player.center_x = CELL_SIZE * 8
+            self.player.center_y = 300
         is_collision = arcade.check_for_collision(self.player, self.tubes_list[0]) + arcade.check_for_collision(self.player, self.tubes_list[1])
         # if arcade.check_for_collision_with_list(self.blocks):
         #     self.blocks.center_y += self.blocks.bump_speed
@@ -137,7 +132,6 @@ class Mainwindow(arcade.Window):
         self.physics_engine.update()
         self.physics_engine1.update()
         self.physics_engine2.update()
-        # self.blocks.update()
 
         #Все что нужно для камеры
         position = (
@@ -159,7 +153,6 @@ class Mainwindow(arcade.Window):
         pass
 
     def on_key_press(self, key, modifiers):
-        #Уменьшить скорость прыжка и менять картинку
         if key == arcade.key.LEFT or key == arcade.key.A:
             self.left = True
         elif key == arcade.key.RIGHT or key == arcade.key.D:
@@ -169,7 +162,7 @@ class Mainwindow(arcade.Window):
             self.down = True
             self.go_to_tubes_down = True
         elif key == arcade.key.SPACE:
-            if self.engine.can_jump() or self.engine1.can_jump() or self.engine2.can_jump() or self.engine3.can_jump():
+            if self.engine.can_jump() or self.engine1.can_jump() or self.engine2.can_jump():
                 self.player.change_y = JUMP_SPEED
 
     def on_key_release(self, key, modifiers):
@@ -177,10 +170,8 @@ class Mainwindow(arcade.Window):
             self.left = False
         elif key in (arcade.key.RIGHT, arcade.key.D):
             self.right = False
-            self.go_to_tubes_right = False
         elif key in (arcade.key.DOWN, arcade.key.S):
             self.down = False
-            self.go_to_tubes_right = False
         elif key == arcade.key.SPACE:
             if self.player.change_y > MIN_JUMP_SPEED:
                 self.player.change_y = MIN_JUMP_SPEED
