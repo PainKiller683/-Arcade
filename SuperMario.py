@@ -1,9 +1,9 @@
 import arcade
 from Mario import Player
-from arcade import Sound
+import arcade
 # from Block import My_Blocks
 import arcade.gui
-from arcade.gui import UIManager
+import arcade.gui
 import random
 
 # Параметры экрана
@@ -13,10 +13,12 @@ SCREEN_HEIGHT = 29 * 16
 SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
 MOVE_SPEED = 0.5
+HOLD_JUMP_FORCE = 0.6
 GRAVITY = 0.4
 PLAYER_GRAVITY = 1
-JUMP_SPEED = 11
-MIN_JUMP_SPEED = 5
+JUMP_SPEED = 4
+MAX_JUMP_FRAMES = 10
+MAX_JUMP_SPEED = 5
 
 class Mainwindow(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
@@ -37,6 +39,8 @@ class Mainwindow(arcade.Window):
         #Игрок и его данные
         self.player_list = arcade.SpriteList()
         self.player = Player()
+        self.jump_button_pressed = False
+
         # self.blocks = My_Blocks()
         self.player_list.append(self.player)
         self.left = self.right = self.up = self.down = False
@@ -60,9 +64,9 @@ class Mainwindow(arcade.Window):
         self.player_music = self.music.play(volume=1)
 
         #Движки для прыжков
-        self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.wall_list)
-        self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.wall_list1)
-        self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=PLAYER_GRAVITY, walls=self.tubes)
+        self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, platforms=self.wall_list)
+        self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, platforms=self.wall_list1)
+        self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, platforms=self.tubes)
 
         #Движки для взаимодействия(ударов)
         self.physics_engine = arcade.PhysicsEngineSimple(
@@ -94,6 +98,16 @@ class Mainwindow(arcade.Window):
         self.engine.update()
         self.engine1.update()
         self.engine2.update()
+
+        #Прыжок
+        if self.jump_button_pressed and self.player.is_jumping:
+            if self.player.jump_frame_counter < MAX_JUMP_FRAMES:
+                # Добавляем силу вверх каждый кадр
+                self.player.change_y += HOLD_JUMP_FORCE
+                self.player.jump_frame_counter += 1
+            else:
+                # Время вышло, больше не взлетаем
+                self.player.is_jumping = False
 
         #Колизии игрока и предметов
         coins_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
@@ -161,6 +175,9 @@ class Mainwindow(arcade.Window):
             self.go_to_tubes_down = True
         elif key == arcade.key.SPACE:
             if self.engine.can_jump() or self.engine1.can_jump() or self.engine2.can_jump():
+                self.jump_button_pressed = True
+                self.player.is_jumping = True
+                self.player.jump_frame_counter = 0
                 self.player.change_y = JUMP_SPEED
 
     def on_key_release(self, key, modifiers):
@@ -171,8 +188,8 @@ class Mainwindow(arcade.Window):
         elif key in (arcade.key.DOWN, arcade.key.S):
             self.down = False
         elif key == arcade.key.SPACE:
-            if self.player.change_y > MIN_JUMP_SPEED:
-                self.player.change_y = MIN_JUMP_SPEED
+            self.jump_button_pressed = False
+            self.player.is_jumping = False
 
 
 def main():

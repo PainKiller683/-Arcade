@@ -1,7 +1,6 @@
 import arcade
-from arcade import Sound
 import arcade.gui
-from arcade.gui import UIManager
+import arcade.gui
 import random
 
 # Параметры экрана
@@ -13,13 +12,14 @@ CELL_SIZE = 16
 MOVE_SPEED = 0.5
 GRAVITY = 0.4
 MAX_JUMPS = 1
-JUMP_SPEED = 11
+JUMP_SPEED = 3
 UPDATES_PER_FRAME = 4
-MIN_JUMP_SPEED = 5
+MAX_JUMP_SPEED = 6
 
 class Player(arcade.Sprite):
     def __init__(self):
         super().__init__()
+        self.is_jumping = False
         self.face_right = True
         stop = arcade.load_texture("Files/ForMario/Картинки/StopMario.png")
         self.idle_textures = [stop, stop.flip_left_right()]
