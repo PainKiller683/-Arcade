@@ -25,6 +25,8 @@ class Player(arcade.Sprite):
         self.idle_textures = [stop, stop.flip_left_right()]
         jump = arcade.load_texture("Files/ForMario/Картинки/JumpMario.png")
         self.jump = [jump, jump.flip_left_right()]
+        slide = arcade.load_texture("Files/ForMario/Картинки/SlideMario.png")
+        self.slide = [slide, slide.flip_left_right()]
         self.walk_textures = []
         for i in range(1, 4):
             walk = arcade.load_texture(f"Files/ForMario/Картинки/MarioGo{i}.png")
@@ -33,28 +35,27 @@ class Player(arcade.Sprite):
         self.texture = self.idle_textures[0]
 
     def update_animation(self, delta_time: float = 1 / 60):
-        if self.change_x > 0:
-            self.face_right = True
-        elif self.change_x < 0:
-            self.face_right = False
-
         idx = 0 if self.face_right else 1
 
-        if abs(self.change_y) > 0.1:
+        # 1. Анимация ПРЫЖКА (Приоритет №1)
+        if abs(self.change_y) > 0.2:
             self.texture = self.jump[idx]
             return
 
-        elif abs(self.change_y) < 0.1:
-            self.texture = self.idle_textures[idx]
-
-        if abs(self.change_x) < 0.1:
-            self.texture = self.idle_textures[idx]
+        # 2. Анимация ЗАНОСА (Приоритет №2)
+        # Если Марио бежит в одну сторону, а игрок жмет в другую
+        is_skidding = (idx == 0 and self.change_x < -0.1) or \
+                  (idx == 1 and self.change_x > 0.1)
+        if is_skidding:
+            self.texture = self.slide[idx]
             return
 
-        # СОСТОЯНИЕ: Бег
-        self.cur_frame += 1
-        frame_index = self.cur_frame // 10
-        if frame_index < len(self.walk_textures):
-            self.texture = self.walk_textures[frame_index][idx]
-        else:
-            self.cur_frame = 0
+        # 3. Анимация БЕГА / ПОКОЯ
+        if abs(self.change_x) > 0.05:
+            self.cur_frame += abs(self.change_x) * 0.1
+            frame = int(self.cur_frame) % 3
+            self.texture = self.walk_textures[frame][idx]
+            return
+
+        # ПРИОРИТЕТ 4: Покой
+        self.texture = self.idle_textures[idx]

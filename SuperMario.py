@@ -12,22 +12,32 @@ SCREEN_WIDTH = 32 * 16
 SCREEN_HEIGHT = 29 * 16
 SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
-MOVE_SPEED = 0.5
-HOLD_JUMP_FORCE = 0.6
-GRAVITY = 0.4
-PLAYER_GRAVITY = 1
-JUMP_SPEED = 4
-MAX_JUMP_FRAMES = 10
-MAX_JUMP_SPEED = 5
+
+
+GRAVITY = 0.9         # Низкая гравитация для плавности
+FRICTION = 0.05
+ACCEL = 0.02    # Долгое скольжение
+MAX_WALK_SPEED = 0.5  # ОЧЕНЬ медленно (всего 1.5 пикселя за тик)
+MAX_RUN_SPEED = 2.5   # Максимальный бег
+
+JUMP_START_IMPULSE = 8.5
+JUMP_ADD_FORCE = 0.5
+JUMP_MAX_FRAMES = 12
 
 class Mainwindow(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
-        super().__init__(screen_width, screen_height, screen_title)
+        super().__init__(screen_width, screen_height, screen_title, fixed_rate=1/60, vsync=True)
         self.player_list = None
         self.player = None
         self.animation_speed = 10
         self.frame_counter = 0
         self.coins = 0
+
+        self.left_down = False
+        self.right_down = False
+        self.jump_down = False
+        self.b_button_down = False
+
         self.world_camera = arcade.camera.Camera2D()
         arcade.set_background_color(arcade.color.BLACK)
         self.all_sprites = arcade.SpriteList()
@@ -43,7 +53,6 @@ class Mainwindow(arcade.Window):
 
         # self.blocks = My_Blocks()
         self.player_list.append(self.player)
-        self.left = self.right = self.up = self.down = False
         self.go_to_tubes_down = False
         self.go_to_tubes_right = False
 
@@ -69,11 +78,11 @@ class Mainwindow(arcade.Window):
         self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY, platforms=self.tubes)
 
         #Движки для взаимодействия(ударов)
-        self.physics_engine = arcade.PhysicsEngineSimple(
+        self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player, self.wall_list)
-        self.physics_engine1 = arcade.PhysicsEngineSimple(
+        self.physics_engine1 = arcade.PhysicsEnginePlatformer(
             self.player, self.wall_list1)
-        self.physics_engine2 = arcade.PhysicsEngineSimple(
+        self.physics_engine2 = arcade.PhysicsEnginePlatformer(
             self.player, self.tubes)
 
     def on_draw(self):
@@ -82,32 +91,44 @@ class Mainwindow(arcade.Window):
         self.all_sprites.draw()
         self.player_list.draw()
 
-    def on_update(self, delta_time):
+    def on_fixed_update(self, delta_time: float):
+        target_max_speed = MAX_RUN_SPEED if self.b_button_down else MAX_WALK_SPEED
+        if self.right_down:
+            self.player.face_right = True
+            if self.player.change_x < target_max_speed:
+                self.player.change_x += ACCEL
+        elif self.left_down:
+            self.player.face_right = False
+            if self.player.change_x > -target_max_speed:
+                self.player.change_x -= ACCEL
+        else:
+            # Трение (инерция остановки)
+            if self.player.change_x > FRICTION:
+                self.player.change_x -= FRICTION
+            elif self.player.change_x < -FRICTION:
+                self.player.change_x += FRICTION
+            else:
+                self.player.change_x = 0
+
+        # 2. ВЕРТИКАЛЬНОЕ ДВИЖЕНИЕ (Прыжок)
+        if self.jump_down and self.player.is_jumping:
+            if self.player.jump_timer < JUMP_MAX_FRAMES:
+                self.player.change_y += JUMP_ADD_FORCE
+                self.player.jump_timer += 1
+            else:
+                self.player.is_jumping = False
+        if self.player.change_y < -12:
+            self.player.change_y = -12
+
         #Обновление игрока
         self.physics_engine.update()
         self.player.update_animation(delta_time)
         #Движение
-        move = 0
-        if self.left and not self.right:
-            move = -MOVE_SPEED
-        elif self.right and not self.left:
-            move = MOVE_SPEED
-        self.player.change_x = move
 
         #Движки для прыжков обновляются
         self.engine.update()
         self.engine1.update()
         self.engine2.update()
-
-        #Прыжок
-        if self.jump_button_pressed and self.player.is_jumping:
-            if self.player.jump_frame_counter < MAX_JUMP_FRAMES:
-                # Добавляем силу вверх каждый кадр
-                self.player.change_y += HOLD_JUMP_FORCE
-                self.player.jump_frame_counter += 1
-            else:
-                # Время вышло, больше не взлетаем
-                self.player.is_jumping = False
 
         #Колизии игрока и предметов
         coins_hit_list = arcade.check_for_collision_with_list(self.player, self.coin_list)
@@ -161,34 +182,33 @@ class Mainwindow(arcade.Window):
         cam_y = max(half_h, min(world_h - half_w, smooth[1]))
         self.world_camera.position = (cam_x, cam_y)
 
-    def on_mouse_press(self, x, y, button, modifiers):
-        pass
+    def update(self, delta_time):
+        self.engine.update(delta_time)
+
 
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.LEFT or key == arcade.key.A:
-            self.left = True
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.right = True
-            self.go_to_tubes_right = True
-        elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.down = True
-            self.go_to_tubes_down = True
-        elif key == arcade.key.SPACE:
-            if self.engine.can_jump() or self.engine1.can_jump() or self.engine2.can_jump():
-                self.jump_button_pressed = True
+        if key == arcade.key.LEFT:
+            self.left_down = True
+        if key == arcade.key.RIGHT:
+            self.right_down = True
+        if key == arcade.key.Z:
+            self.b_button_down = True
+        if key == arcade.key.SPACE:
+            if self.physics_engine.can_jump() or self.physics_engine1.can_jump() or self.physics_engine2.can_jump():
+                self.jump_down = True
                 self.player.is_jumping = True
-                self.player.jump_frame_counter = 0
-                self.player.change_y = JUMP_SPEED
+                self.player.jump_timer = 0
+                self.player.change_y = JUMP_START_IMPULSE + (abs(self.player.change_x) * 0.2)
 
     def on_key_release(self, key, modifiers):
-        if key in (arcade.key.LEFT, arcade.key.A):
-            self.left = False
-        elif key in (arcade.key.RIGHT, arcade.key.D):
-            self.right = False
-        elif key in (arcade.key.DOWN, arcade.key.S):
-            self.down = False
-        elif key == arcade.key.SPACE:
-            self.jump_button_pressed = False
+        if key == arcade.key.LEFT:
+            self.left_down = False
+        if key == arcade.key.RIGHT:
+            self.right_down = False
+        if key == arcade.key.Z:
+            self.b_button_down = False
+        if key == arcade.key.SPACE:
+            self.jump_down = False
             self.player.is_jumping = False
 
 
