@@ -1,0 +1,60 @@
+{
+  "height": 15,
+  "width": 100,
+  "tileheight": 16,
+  "tilewidth": 16,
+  "infinite": false,
+  "layers": [
+    {
+      "type": "tilelayer",
+      "name": "Ground",
+      "width": 100,
+      "height": 15,
+      "data": [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "PlayerSpawn",
+      "objects": [
+        { "x": 32, "y": 64, "width": 16, "height": 16 }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "Enemies",
+      "objects": [
+        { "name": "Koopa", "x": 160, "y": 64, "width": 16, "height": 16 }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "Coins",
+      "objects": [
+        { "x": 96, "y": 96, "width": 16, "height": 16 }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "Flag",
+      "objects": [
+        { "x": 400, "y": 32, "width": 16, "height": 160 }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "Exit",
+      "objects": [
+        { "x": 460, "y": 32, "width": 16, "height": 32 }
+      ]
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "source": "../tiles/nes_tiles.tsx"
+    }
+  ]
+}

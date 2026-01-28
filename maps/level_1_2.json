@@ -1,0 +1,39 @@
+{
+  "height": 15,
+  "width": 60,
+  "tileheight": 16,
+  "tilewidth": 16,
+  "layers": [
+    {
+      "type": "tilelayer",
+      "name": "Ground",
+      "width": 60,
+      "height": 15,
+      "data": [
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+      ]
+    },
+    {
+      "type": "tilelayer",
+      "name": "UndergroundCeiling",
+      "width": 60,
+      "height": 15,
+      "data": [
+        1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "PlayerSpawn",
+      "objects": [
+        { "x": 32, "y": 64, "width": 16, "height": 16 }
+      ]
+    }
+  ],
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "source": "../tiles/nes_tiles.tsx"
+    }
+  ]
+}
