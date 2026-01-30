@@ -24,10 +24,11 @@ SCREEN_HEIGHT = 29 * 16
 
 class Goomba(arcade.Sprite):
     def __init__(self, x, y):
-        self.textures1 = arcade.load_texture("Files/ForMario/Enemies/goomba1.png")
-        self.textures2 = arcade.load_texture("Files/ForMario/Enemies/goomba2.png")
+        self.textures1 = arcade.load_texture("Files/ForMario/Картинки/goomba1.png")
+        self.textures2 = arcade.load_texture("Files/ForMario/Картинки/goomba2.png")
         self.walks = [self.textures1, self.textures2]
         super().__init__(scale=1)
+        self.nums_player = 1
         self.center_x = x
         self.center_y = y
         self.change_x = -0.4
@@ -52,8 +53,8 @@ class Goomba(arcade.Sprite):
 
 class Koopa(arcade.Sprite):
     def __init__(self, x, y):
-        self.textures1 = arcade.load_texture("Files/ForMario/Enemies/koopa1.png")
-        self.textures2 = arcade.load_texture("Files/ForMario/Enemies/koopa2.png")
+        self.textures1 = arcade.load_texture("Files/ForMario/Картинки/koopa1.png")
+        self.textures2 = arcade.load_texture("Files/ForMario/Картинки/koopa2.png")
         self.walks = [self.textures1, self.textures2]
         self.shell = arcade.load_texture("Files/ForMario/Enemies/koopa_shell.png")
         super().__init__(scale=1)
@@ -104,8 +105,8 @@ class Game(arcade.Window):
         self.timer = TIMER_START
         self.level = 1
 
-        map_path = "/home/user/PycharmProjects/Arcade30января/Files/ForMario/Тайлы//ForMario/Тайлы/World 1.1 SuperMario.tmx"
-        map_path1 = "/home/user/PycharmProjects/Arcade30января/Files/ForMario/Тайлы//ForMario/Тайлы/1.2.tmx"
+        map_path = "Files/ForMario/Тайлы/World 1.1 SuperMario.tmx"
+        map_path1 = "Files/ForMario/Тайлы/1.2.tmx"
         if self.level != 2:
             self.tilemap = arcade.load_tilemap(map_path, scaling=1)
             self.enemies = arcade.SpriteList()
@@ -122,13 +123,13 @@ class Game(arcade.Window):
             self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
         else:
             self.tilemap = arcade.load_tilemap(map_path1, scaling=1)
-            self.wall_list = self.tilemap.sprite_lists["Walls"]
-            self.tubes_list = self.tilemap.sprite_lists["ExitTubes"]
+            self.wall_list = self.tilemap.sprite_lists["walls"]
+            self.tubes_list = self.tilemap.sprite_lists["exittubes"]
             self.wall_list1 = self.tilemap.sprite_lists["Under Walls"]
-            self.tubes = self.tilemap.sprite_lists["Tubes"]
+            self.tubes = self.tilemap.sprite_lists["tubes"]
             self.nothing = self.tilemap.sprite_lists["Nothing"]
             self.fall = self.tilemap.sprite_lists["fall"]
-            self.coin_list = self.tilemap.sprite_lists["Coins"]
+            self.coin_list = self.tilemap.sprite_lists["coins"]
         self.scene = arcade.Scene.from_tilemap(self.tilemap)
 
         self.items = arcade.SpriteList()
@@ -258,12 +259,13 @@ class Game(arcade.Window):
         self.timer -= dt
         if self.timer <= 0:
             self.player.dead = True
-
         if self.player.dead:
             self.lives -= 1
             if self.lives > 0:
                 return
             else:
+                with open("file.txt", "w") as file:
+                    file.write(f"Player{self.nums_player} {self.score}")
                 self.state = "START"
             return
 
@@ -399,11 +401,11 @@ class Game(arcade.Window):
             if self.visible:
                 return
             self.visible = True
-            self.texture = arcade.load_texture("Files/ForMario/Blocks/empty.png")
+            self.texture = arcade.load_texture("/home/user/PycharmProjects/Arcade30января/Files/ForMario/ForMario/Blocks/empty.png")
 
     class FlagPole(arcade.Sprite):
         def __init__(self, x, y):
-            super().__init__("Files/ForMario/Flag/pole.png", scale=1)
+            super().__init__("/home/user/PycharmProjects/Arcade30января/Files/ForMario/Картинки/pole.png", scale=1)
             self.center_x = x
             self.center_y = y
             self.activated = False
