@@ -21,15 +21,15 @@ class Mario(arcade.Sprite):
         self.texture = self.idle_textures[0]
 
         # BIG MARIO
-        self.big_idle_r = arcade.load_texture("Files/ForMario/Картинки/idles.png")
-        self.big_idle_l = self.big_idle_r.flip_left_right()
-        self.big_jump_r = arcade.load_texture("Files/ForMario/Картинки/jumps.png")
-        self.big_jump_l = self.big_jump_r.flip_left_right()
-
-        self.big_walk = []
-        for i in range(1, 4):
-            t = arcade.load_texture(f"Files/ForMario/Картинки/walks{i}.png")
-            self.big_walk.append((t, t.flip_left_right()))
+        # self.big_idle_r = arcade.load_texture("Files/ForMario/Картинки/idles.png")
+        # self.big_idle_l = self.big_idle_r.flip_left_right()
+        # self.big_jump_r = arcade.load_texture("Files/ForMario/Картинки/jumps.png")
+        # self.big_jump_l = self.big_jump_r.flip_left_right()
+        #
+        # self.big_walk = []
+        # for i in range(1, 4):
+        #     t = arcade.load_texture(f"Files/ForMario/Картинки/walks{i}.png")
+        #     self.big_walk.append((t, t.flip_left_right()))
 
         # STATE
         self.big = False
@@ -43,21 +43,21 @@ class Mario(arcade.Sprite):
         self.death_jump = False
         self.death_timer = 0
 
-    def grow(self):
-        if not self.big:
-            self.big = True
-            self.scale = 1.2
-
-    def shrink(self):
-        self.big = False
-        self.scale = 1
-        self.invincible_timer = 120
+    # def grow(self):
+    #     if not self.big:
+    #         self.big = True
+    #         self.scale = 1.2
+    #
+    # def shrink(self):
+    #     self.big = False
+    #     self.scale = 1
+    #     self.invincible_timer = 120
 
     def hit(self):
         if self.invincible_timer > 0:
             return
         if self.big:
-            self.shrink()
+            return
         else:
             self.dead = True
             self.control_locked = True

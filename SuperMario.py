@@ -19,43 +19,6 @@ SCREEN_WIDTH = 32 * 16
 SCREEN_HEIGHT = 29 * 16
 
 # ==================================================
-# ITEMS
-# ==================================================
-
-class Coin(arcade.Sprite):
-    def __init__(self, x, y):
-        super().__init__("Files/ForMario/Items/coin.png", scale=1)
-        self.center_x = x
-        self.center_y = y
-        self.life = 30
-
-    def update(self):
-        self.center_y += 2
-        self.life -= 1
-        if self.life <= 0:
-            self.remove_from_sprite_lists()
-
-
-class Mushroom(arcade.Sprite):
-    def __init__(self, x, y):
-        super().__init__("Files/ForMario/Items/mushroom.png", scale=1)
-        self.center_x = x
-        self.center_y = y
-        self.state = "EMERGE"
-        self.change_x = 0
-        self.change_y = 1
-
-    def update(self):
-        if self.state == "EMERGE":
-            self.center_y += self.change_y
-            if self.center_y % CELL == 0:
-                self.state = "MOVE"
-                self.change_x = 0.6
-        elif self.state == "MOVE":
-            self.center_x += self.change_x
-
-
-# ==================================================
 # ENEMIES
 # ==================================================
 
@@ -141,25 +104,38 @@ class Game(arcade.Window):
         self.timer = TIMER_START
         self.level = 1
 
-        map_path = (
-            "Files/ForMario/Тайлы/World 1.1 SuperMario.tmx"
-            if self.level == 1
-            else "Files/ForMario/Тайлы/World2.tmx"
-        )
-
-        self.tilemap = arcade.load_tilemap(map_path, scaling=1)
+        map_path = "/home/user/PycharmProjects/Arcade30января/Files/ForMario/Тайлы//ForMario/Тайлы/World 1.1 SuperMario.tmx"
+        map_path1 = "/home/user/PycharmProjects/Arcade30января/Files/ForMario/Тайлы//ForMario/Тайлы/1.2.tmx"
+        if self.level != 2:
+            self.tilemap = arcade.load_tilemap(map_path, scaling=1)
+            self.enemies = arcade.SpriteList()
+            self.enemies.append(Goomba(CELL * 30, CELL * 30))
+            self.enemies.append(Goomba(CELL * 60, CELL * 30))
+            self.enemies.append(Koopa(CELL * 90, CELL * 30))
+            self.wall_list = self.tilemap.sprite_lists["Walls"]
+            self.tubes_list = self.tilemap.sprite_lists["ExitTubes"]
+            self.wall_list1 = self.tilemap.sprite_lists["Under Walls"]
+            self.tubes = self.tilemap.sprite_lists["Tubes"]
+            self.nothing = self.tilemap.sprite_lists["Nothing"]
+            self.fall = self.tilemap.sprite_lists["fall"]
+            self.coin_list = self.tilemap.sprite_lists["Coins"]
+            self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
+        else:
+            self.tilemap = arcade.load_tilemap(map_path1, scaling=1)
+            self.wall_list = self.tilemap.sprite_lists["Walls"]
+            self.tubes_list = self.tilemap.sprite_lists["ExitTubes"]
+            self.wall_list1 = self.tilemap.sprite_lists["Under Walls"]
+            self.tubes = self.tilemap.sprite_lists["Tubes"]
+            self.nothing = self.tilemap.sprite_lists["Nothing"]
+            self.fall = self.tilemap.sprite_lists["fall"]
+            self.coin_list = self.tilemap.sprite_lists["Coins"]
         self.scene = arcade.Scene.from_tilemap(self.tilemap)
-
-        self.player = Mario()
 
         self.items = arcade.SpriteList()
         self.enemies = arcade.SpriteList()
 
-        self.enemies.append(Goomba(CELL * 30, CELL * 30))
-        self.enemies.append(Goomba(CELL * 60, CELL * 30))
-        self.enemies.append(Koopa(CELL * 90, CELL * 30))
         self.player_list = None
-        self.player = None
+        self.player = Mario()
         self.animation_speed = 10
         self.frame_counter = 0
         self.coins = 0
@@ -172,26 +148,14 @@ class Game(arcade.Window):
         self.world_camera = arcade.camera.Camera2D()
         arcade.set_background_color(arcade.color.BLACK)
         self.all_sprites = arcade.SpriteList()
-        self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
-        self.tile_map = arcade.load_tilemap("Files/ForMario/Тайлы/World 1.1 SuperMario.tmx", scaling=1)
-        self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         self.player_list = arcade.SpriteList()
-        self.player = Mario()
         self.jump_button_pressed = False
 
         self.player_list.append(self.player)
         self.left = self.right = self.up = self.down = False
         self.go_to_tubes_down = False
         self.go_to_tubes_right = False
-
-        self.wall_list = self.tile_map.sprite_lists["Walls"]
-        self.tubes_list = self.tile_map.sprite_lists["ExitTubes"]
-        self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
-        self.tubes = self.tile_map.sprite_lists["Tubes"]
-        self.nothing = self.tile_map.sprite_lists["Nothing"]
-        self.fall = self.tile_map.sprite_lists["fall"]
-        self.coin_list = self.tile_map.sprite_lists["Coins"]
 
         self.player.center_x = CELL_SIZE * 8
         self.player.center_y = 300
@@ -222,14 +186,6 @@ class Game(arcade.Window):
         self.go_to_tubes_down = False
         self.go_to_tubes_right = False
 
-        self.wall_list = self.tile_map.sprite_lists["Walls"]
-        self.tubes_list = self.tile_map.sprite_lists["ExitTubes"]
-        self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
-        self.tubes = self.tile_map.sprite_lists["Tubes"]
-        self.nothing = self.tile_map.sprite_lists["Nothing"]
-        self.fall = self.tile_map.sprite_lists["fall"]
-        self.coin_list = self.tile_map.sprite_lists["Coins"]
-
         self.player.center_x = CELL_SIZE * 8
         self.player.center_y = 300
 
@@ -248,35 +204,6 @@ class Game(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, self.wall_list)
         self.physics_engine1 = arcade.PhysicsEnginePlatformer(self.player, self.wall_list1)
         self.physics_engine2 = arcade.PhysicsEnginePlatformer(self.player, self.tubes)
-
-    # ------------------------------------------------
-
-    def load_level(self, lvl):
-        self.level = lvl
-        self.timer = TIMER_START
-
-        map_path = (
-            "Files/ForMario/Тайлы/World 1.1 SuperMario.tmx"
-            if self.level == 1
-            else "Files/ForMario/Тайлы/World2.tmx"
-        )
-
-        self.tilemap = arcade.load_tilemap(map_path, scaling=1)
-        self.scene = arcade.Scene.from_tilemap(self.tilemap)
-
-        self.player = Mario()
-        self.player.center_x = CELL * 5
-        self.player.center_y = CELL * 20
-        self.scene.add_sprite("Player", self.player)
-
-        self.walls = self.scene.get_sprite_list("Walls")
-
-        self.items = arcade.SpriteList()
-        self.enemies = arcade.SpriteList()
-
-        self.enemies.append(Goomba(CELL * 30, CELL * 30))
-        self.enemies.append(Goomba(CELL * 60, CELL * 30))
-        self.enemies.append(Koopa(CELL * 90, CELL * 30))
 
     # ------------------------------------------------
 
@@ -335,7 +262,7 @@ class Game(arcade.Window):
         if self.player.dead:
             self.lives -= 1
             if self.lives > 0:
-                self.load_level(self.level)
+                return
             else:
                 self.state = "START"
             return
@@ -407,7 +334,6 @@ class Game(arcade.Window):
         if self.state == "START" and key == arcade.key.ENTER:
             self.state = "GAME"
             self.level += 1
-            self.load_level(1)
 
         if self.player.control_locked:
             return
@@ -435,7 +361,7 @@ class Game(arcade.Window):
 
     class QuestionBlock(arcade.Sprite):
         def __init__(self, x, y, content="coin"):
-            super().__init__("Files/ForMario/Blocks/question.png", scale=1)
+            super().__init__("Files/ForMario/Картинки/question.png", scale=1)
             self.center_x = x
             self.center_y = y
             self.content = content
@@ -445,20 +371,15 @@ class Game(arcade.Window):
             if self.used:
                 return
             self.used = True
-            self.texture = arcade.load_texture("Files/ForMario/Blocks/empty.png")
+            self.texture = arcade.load_texture("Files/ForMario/Картинки/empty.png")
 
             if self.content == "coin":
-                coin = Coin(self.center_x, self.center_y + 16)
-                game.items.append(coin)
-                game.coins += 1
+                self.update()
                 game.score += 200
-            elif self.content == "mushroom":
-                mush = Mushroom(self.center_x, self.center_y + 16)
-                game.items.append(mush)
 
     class BrickBlock(arcade.Sprite):
         def __init__(self, x, y):
-            super().__init__("Files/ForMario/Blocks/brick.png", scale=1)
+            super().__init__("Files/ForMario/Картинки/brick.png", scale=1)
             self.center_x = x
             self.center_y = y
             self.broken = False
@@ -466,19 +387,6 @@ class Game(arcade.Window):
         def hit(self, game):
             if self.broken:
                 return
-
-            if game.player.big:
-                self.broken = True
-                self.remove_from_sprite_lists()
-                game.score += 50
-
-                for i in range(4):
-                    piece = arcade.Sprite("Files/ForMario/Blocks/brick_piece.png", scale=1)
-                    piece.center_x = self.center_x
-                    piece.center_y = self.center_y
-                    piece.change_x = (-1 if i % 2 == 0 else 1) * 2
-                    piece.change_y = 4
-                    game.items.append(piece)
 
     class InvisibleBlock(arcade.Sprite):
         def __init__(self, x, y):
@@ -518,25 +426,6 @@ class Game(arcade.Window):
             else:
                 self.flag_finish = False
                 self.load_level(self.level + 1)
-
-    class TeleportPipe:
-        def __init__(self, x, y, target_x, target_y):
-            self.rect = arcade.Rectangle(x, y, 16, 16)
-            self.target_x = target_x
-            self.target_y = target_y
-            self.cooldown = 0
-
-        def try_teleport(self, player):
-            if self.cooldown > 0:
-                self.cooldown -= 1
-                return
-
-            if arcade.check_for_collision_with_point(
-                    (player.center_x, player.center_y), self.rect
-            ):
-                player.center_x = self.target_x
-                player.center_y = self.target_y
-                self.cooldown = 60
 
     class HUD:
         def draw(self, game, cam_x):
