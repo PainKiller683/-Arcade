@@ -12,23 +12,128 @@ SCREEN_WIDTH = 32 * 16
 SCREEN_HEIGHT = 29 * 16
 SCREEN_TITLE = "Супер Марио"
 CELL_SIZE = 16
-
-
-GRAVITY = 0.9         # Низкая гравитация для плавности
+CELL = 16
+PLAYER_SPEED = 2.3
+JUMP_FORCE = 8.8
+TIMER_START = 400
+JUMP_MAX_FRAMES = 12
+GRAVITY = 0.4         # Низкая гравитация для плавности
 FRICTION = 0.05
 ACCEL = 0.02    # Долгое скольжение
 MAX_WALK_SPEED = 0.5  # ОЧЕНЬ медленно (всего 1.5 пикселя за тик)
 MAX_RUN_SPEED = 2.5   # Максимальный бег
-
-JUMP_START_IMPULSE = 8.5
+JUMP_START_IMPULSE = 9.5
 JUMP_ADD_FORCE = 0.5
-JUMP_MAX_FRAMES = 12
+
+
+class Koopa(arcade.Sprite):
+    def __init__(self, x, y):
+        self.textures1 = arcade.load_texture("Files/ForMario/Картинки/koopa1.png")
+        self.textures2 = arcade.load_texture("Files/ForMario/Картинки/koopa2.png")
+        self.walks = [self.textures1, self.textures2]
+        self.shell = arcade.load_texture("Files/ForMario/Картинки/koopa_shell.png")
+        super().__init__(scale=1)
+        self.center_x = x
+        self.center_y = y
+        self.change_x = -0.5
+        self.frame = 0
+        self.in_shell = False
+
+    def update(self):
+        self.center_x += self.change_x
+
+    def update_animation(self):
+        if self.in_shell:
+            return
+        self.frame = (self.frame + 1) % 2
+        self.texture = self.walks[self.frame]
+
+    def stomp(self):
+        self.in_shell = True
+        self.change_x = 0
+        self.texture = self.shell
+
+    def kick(self, direction):
+        self.change_x = 5 * direction
+
+class Goomba(arcade.Sprite):
+    def __init__(self, x, y):
+        self.textures1 = arcade.load_texture("Files/ForMario/Картинки/goomba1.png")
+        self.textures2 = arcade.load_texture("Files/ForMario/Картинки/goomba2.png")
+        self.walks = [self.textures1, self.textures2]
+        super().__init__(scale=1)
+        self.nums_player = 1
+        self.center_x = x
+        self.center_y = y
+        self.change_x = -0.4
+        self.frame = 0
+        self.dead = False
+
+    def update(self):
+        if not self.dead:
+            self.center_x += self.change_x
+
+    def update_animation(self):
+        if self.dead:
+            return
+        self.frame = (self.frame + 1) % 2
+        self.texture = self.walks[self.frame]
+
+    def stomp(self):
+        self.dead = True
+        self.change_x = 0
+        self.angle = 180
 
 class Mainwindow(arcade.Window):
     def __init__(self, screen_width, screen_height, screen_title):
         super().__init__(screen_width, screen_height, screen_title, fixed_rate=1/60, vsync=True)
+        self.left_down = False
+        self.right_down = False
+        self.jump_down = False
+        self.b_button_down = False
+        arcade.set_background_color(arcade.color.BLACK)
+
+        self.camera = arcade.Camera2D()
+        self.state = "START"
+        self.level = 1
+        self.player = Player()
+        self.score = 0
+        self.coins = 0
+        self.lives = 3
+        self.timer = TIMER_START
+        self.level = 1
+
+        map_path = "Files/ForMario/Тайлы/World 1.1 SuperMario.tmx"
+        map_path1 = "Files/ForMario/Тайлы/1.2.tmx"
+        if self.level != 2:
+            self.tilemap = arcade.load_tilemap(map_path, scaling=1)
+            self.enemies = arcade.SpriteList()
+            self.enemies.append(Goomba(CELL * 30, CELL * 30))
+            self.enemies.append(Goomba(CELL * 60, CELL * 30))
+            self.enemies.append(Koopa(CELL * 90, CELL * 30))
+            self.wall_list = self.tilemap.sprite_lists["Walls"]
+            self.tubes_list = self.tilemap.sprite_lists["ExitTubes"]
+            self.wall_list1 = self.tilemap.sprite_lists["Under Walls"]
+            self.tubes = self.tilemap.sprite_lists["Tubes"]
+            self.nothing = self.tilemap.sprite_lists["Nothing"]
+            self.fall = self.tilemap.sprite_lists["fall"]
+            self.coin_list = self.tilemap.sprite_lists["Coins"]
+            self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
+        else:
+            self.tilemap = arcade.load_tilemap(map_path1, scaling=1)
+            self.wall_list = self.tilemap.sprite_lists["walls"]
+            self.tubes_list = self.tilemap.sprite_lists["exittubes"]
+            self.wall_list1 = self.tilemap.sprite_lists["Under Walls"]
+            self.tubes = self.tilemap.sprite_lists["tubes"]
+            self.nothing = self.tilemap.sprite_lists["Nothing"]
+            self.fall = self.tilemap.sprite_lists["fall"]
+            self.coin_list = self.tilemap.sprite_lists["coins"]
+        self.scene = arcade.Scene.from_tilemap(self.tilemap)
+
+        self.items = arcade.SpriteList()
+        self.enemies = arcade.SpriteList()
+
         self.player_list = None
-        self.player = None
         self.animation_speed = 10
         self.frame_counter = 0
         self.coins = 0
@@ -41,9 +146,33 @@ class Mainwindow(arcade.Window):
         self.world_camera = arcade.camera.Camera2D()
         arcade.set_background_color(arcade.color.BLACK)
         self.all_sprites = arcade.SpriteList()
-        self.music = arcade.load_sound("Files/ForMario/music for mario/01. Ground Theme.mp3", False)
-        self.tile_map = arcade.load_tilemap("Files/ForMario/Тайлы/World 1.1 SuperMario.tmx", scaling=1)
-        self.scene = arcade.Scene.from_tilemap(self.tile_map)
+
+        self.player_list = arcade.SpriteList()
+        self.jump_button_pressed = False
+
+        self.player_list.append(self.player)
+        self.left = self.right = self.up = self.down = False
+        self.go_to_tubes_down = False
+        self.go_to_tubes_right = False
+
+        self.player.center_x = CELL_SIZE * 8
+        self.player.center_y = 300
+
+        # Музыка и звуки
+        self.player_music = self.music.play(volume=1)
+
+        # Движки для прыжков
+        self.engine = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY,
+                                                     platforms=self.wall_list)
+        self.engine1 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY,
+                                                      platforms=self.wall_list1)
+        self.engine2 = arcade.PhysicsEnginePlatformer(player_sprite=self.player, gravity_constant=GRAVITY,
+                                                      platforms=self.tubes)
+
+        # Движки для взаимодействия(ударов)
+        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, self.wall_list)
+        self.physics_engine1 = arcade.PhysicsEnginePlatformer(self.player, self.wall_list1)
+        self.physics_engine2 = arcade.PhysicsEnginePlatformer(self.player, self.tubes)
 
     def setup(self):
         #Игрок и его данные
@@ -57,13 +186,6 @@ class Mainwindow(arcade.Window):
         self.go_to_tubes_right = False
 
         #Загрузка спрайтой
-        self.wall_list = self.tile_map.sprite_lists["Walls"]
-        self.tubes_list = self.tile_map.sprite_lists["ExitTubes"]
-        self.wall_list1 = self.tile_map.sprite_lists["Under Walls"]
-        self.tubes = self.tile_map.sprite_lists["Tubes"]
-        self.nothing = self.tile_map.sprite_lists["Nothing"]
-        self.fall = self.tile_map.sprite_lists["fall"]
-        self.coin_list = self.tile_map.sprite_lists["Coins"]
 
         #Начальное положение игрока
         self.player.center_x = CELL_SIZE * 8
@@ -86,6 +208,7 @@ class Mainwindow(arcade.Window):
             self.player, self.tubes)
 
     def on_draw(self):
+        self.enemies.draw()
         self.world_camera.use()
         self.scene.draw()
         self.all_sprites.draw()
